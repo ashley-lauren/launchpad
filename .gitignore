@@ -1,0 +1,16 @@
+.dart_tool/
+.appdata/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+*.iml
+.idea/
+.vscode/
+.env
+.env.local
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies

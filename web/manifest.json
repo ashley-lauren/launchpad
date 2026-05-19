@@ -1,0 +1,12 @@
+{
+  "name": "Launchpad",
+  "short_name": "Launchpad",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#00d7ff",
+  "description": "Offline-first classroom warm-up system",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": []
+}
