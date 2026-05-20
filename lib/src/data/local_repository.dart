@@ -29,14 +29,39 @@ class LocalRepository implements LaunchpadRepository {
       '#2196F3',
       '#9C27B0',
     ];
-    final memberSets = const [
-      ['Alex', 'Jordan'],
-      ['Casey', 'Morgan'],
-      ['Riley', 'Sam'],
-      ['Taylor', 'Blake'],
-      ['Drew', 'Casey'],
-      ['Avery', 'Quinn'],
+
+    // Shuffled uncommon but real student names
+    final allStudents = [
+      'Kai',
+      'Luca',
+      'Nova',
+      'Zara',
+      'Axel',
+      'Iris',
+      'Sienna',
+      'Dexter',
+      'Aurora',
+      'Jasper',
+      'River',
+      'Sage',
+      'Quinn',
+      'Riley',
+      'Indigo',
+      'Phoenix',
+      'Emmet',
+      'Tatum',
     ];
+    allStudents.shuffle();
+
+    final memberSets = [
+      allStudents.sublist(0, 3),
+      allStudents.sublist(3, 6),
+      allStudents.sublist(6, 9),
+      allStudents.sublist(9, 12),
+      allStudents.sublist(12, 15),
+      allStudents.sublist(15, 18),
+    ];
+
     final teams = [
       'Debug Dragons',
       'Quantum Penguins',
@@ -74,17 +99,17 @@ class LocalRepository implements LaunchpadRepository {
         createdAt: now,
       ),
       LaunchClass(
-        id: '00000000-0000-4000-8000-000000000003',
+        id: '00000000-0000-4000-8000-000000000004',
         name: 'Computer Science 1 - Period 4',
         createdAt: now,
       ),
       LaunchClass(
-        id: '00000000-0000-4000-8000-000000000003',
+        id: '00000000-0000-4000-8000-000000000005',
         name: 'Physics - Period 5',
         createdAt: now,
       ),
       LaunchClass(
-        id: '00000000-0000-4000-8000-000000000003',
+        id: '00000000-0000-4000-8000-000000000006',
         name: 'Computer Science 3 - Period 6',
         createdAt: now,
       ),
@@ -99,10 +124,11 @@ class LocalRepository implements LaunchpadRepository {
         prompt:
             'A warehouse robot can complete tasks faster by taking more risks. How should its algorithm balance speed vs safety?',
         agenda: const [
-          'Warm-up reasoning sprint',
-          'Prototype sensor decision trees',
-          'Gallery walk and feedback',
-          'Exit reflection',
+          AgendaItem(title: 'Warm-up reasoning sprint', durationMinutes: 8),
+          AgendaItem(
+              title: 'Prototype sensor decision trees', durationMinutes: 12),
+          AgendaItem(title: 'Gallery walk and feedback', durationMinutes: 10),
+          AgendaItem(title: 'Exit reflection', durationMinutes: 5),
         ],
         active: true,
         createdAt: now,

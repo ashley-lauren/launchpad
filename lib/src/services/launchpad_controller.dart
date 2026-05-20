@@ -78,9 +78,18 @@ class LaunchpadController extends ChangeNotifier {
     required String prompt,
     required List<String> agenda,
   }) async {
+    final agendaItems =
+        agenda.where((item) => item.trim().isNotEmpty).map((item) {
+      final trimmed = item.trim();
+      return AgendaItem(
+        title: trimmed,
+        durationMinutes: 5,
+      );
+    }).toList();
+
     final updated = state.warmup.copyWith(
       prompt: prompt,
-      agenda: agenda.where((item) => item.trim().isNotEmpty).toList(),
+      agenda: agendaItems,
       updatedAt: DateTime.now().toUtc(),
     );
     await localRepository.saveWarmup(updated);

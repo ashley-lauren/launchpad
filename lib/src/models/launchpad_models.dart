@@ -1,4 +1,22 @@
-import 'dart:convert';
+class AgendaItem {
+  const AgendaItem({
+    required this.title,
+    required this.durationMinutes,
+  });
+
+  final String title;
+  final int durationMinutes;
+
+  factory AgendaItem.fromJson(Map<String, dynamic> json) => AgendaItem(
+        title: json['title'] as String? ?? json.toString(),
+        durationMinutes: json['duration_minutes'] as int? ?? 5,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'duration_minutes': durationMinutes,
+      };
+}
 
 class LaunchClass {
   const LaunchClass({
@@ -103,14 +121,14 @@ class Warmup {
   final String id;
   final String classId;
   final String prompt;
-  final List<String> agenda;
+  final List<AgendaItem> agenda;
   final bool active;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Warmup copyWith({
     String? prompt,
-    List<String>? agenda,
+    List<AgendaItem>? agenda,
     DateTime? updatedAt,
   }) =>
       Warmup(
@@ -123,23 +141,33 @@ class Warmup {
         updatedAt: updatedAt ?? this.updatedAt,
       );
 
-  factory Warmup.fromJson(Map<String, dynamic> json) => Warmup(
-        id: json['id'] as String,
-        classId: json['class_id'] as String,
-        prompt: json['prompt'] as String,
-        agenda: (jsonDecode(jsonEncode(json['agenda'])) as List)
-            .map((item) => item.toString())
-            .toList(),
-        active: json['active'] as bool? ?? true,
-        createdAt: DateTime.parse(json['created_at'] as String),
-        updatedAt: DateTime.parse(json['updated_at'] as String),
-      );
+  factory Warmup.fromJson(Map<String, dynamic> json) {
+    final agendaData = json['agenda'] as List<dynamic>? ?? [];
+    final agenda = agendaData.map((item) {
+      if (item is Map<String, dynamic>) {
+        return AgendaItem.fromJson(item);
+      } else if (item is String) {
+        return AgendaItem(title: item, durationMinutes: 5);
+      }
+      return AgendaItem(title: item.toString(), durationMinutes: 5);
+    }).toList();
+
+    return Warmup(
+      id: json['id'] as String,
+      classId: json['class_id'] as String,
+      prompt: json['prompt'] as String,
+      agenda: agenda,
+      active: json['active'] as bool? ?? true,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'class_id': classId,
         'prompt': prompt,
-        'agenda': agenda,
+        'agenda': agenda.map((item) => item.toJson()).toList(),
         'active': active,
         'created_at': createdAt.toIso8601String(),
         'updated_at': updatedAt.toIso8601String(),

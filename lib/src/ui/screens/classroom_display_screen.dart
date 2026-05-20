@@ -118,8 +118,9 @@ class _HeroPanel extends StatelessWidget {
                     children: [
                       for (var i = 0; i < warmup.agenda.length; i++) ...[
                         _AgendaFlowItem(
-                          label: warmup.agenda[i],
-                          durationLabel: '≈ 5 min',
+                          label: warmup.agenda[i].title,
+                          durationLabel:
+                              '≈ ${warmup.agenda[i].durationMinutes} min',
                         ),
                         if (i < warmup.agenda.length - 1)
                           const Icon(
@@ -152,9 +153,11 @@ class _AgendaFlowItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFF7EE787).withOpacity(0.04),
+        color: const Color(0xFF7EE787).withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF7EE787).withOpacity(0.45)),
+        border: Border.all(
+          color: const Color(0xFF7EE787).withValues(alpha: 0.45),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -223,66 +226,69 @@ class _TeamGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Team Map',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 14),
-            GridView.count(
-              crossAxisCount: MediaQuery.sizeOf(context).width > 700 ? 3 : 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 1.55,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: teams.map((team) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(
-                      color: teamAccentColor(team).withOpacity(0.45),
-                      width: 1.5,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 400),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Team Map',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 14),
+              GridView.count(
+                crossAxisCount: MediaQuery.sizeOf(context).width > 700 ? 3 : 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: 1.55,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: teams.map((team) {
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: teamAccentColor(team).withValues(alpha: 0.45),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  color: teamAccentColor(team).withOpacity(0.04),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          team.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                    color: teamAccentColor(team).withValues(alpha: 0.04),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            team.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        Text(
-                          team.members
-                              .asMap()
-                              .entries
-                              .map((e) => e.value)
-                              .join('\n'),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8B949E),
-                            height: 1.5,
+                          Text(
+                            team.members
+                                .asMap()
+                                .entries
+                                .map((e) => e.value)
+                                .join('\n'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF8B949E),
+                              height: 1.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -296,45 +302,48 @@ class _Standings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Leaderboard',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-            for (final team in teams)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: teamAccentColor(team),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        team.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(
-                      '${team.points}',
-                      style: TextStyle(color: teamAccentColor(team)),
-                    ),
-                  ],
-                ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 400),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Leaderboard',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
-          ],
+              const SizedBox(height: 12),
+              for (final team in teams)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: teamAccentColor(team),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          team.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Text(
+                        '${team.points}',
+                        style: TextStyle(color: teamAccentColor(team)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

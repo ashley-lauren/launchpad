@@ -23,7 +23,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     super.initState();
     final warmup = widget.controller.state.warmup;
     _promptController = TextEditingController(text: warmup.prompt);
-    _agendaController = TextEditingController(text: warmup.agenda.join('\n'));
+    _agendaController = TextEditingController(
+      text: warmup.agenda.map((item) => item.title).join('\n'),
+    );
   }
 
   @override

@@ -25,7 +25,8 @@ Color teamAccentColor(Team team) {
   return Color(_teamAccentPalette[index]);
 }
 
-Color teamAccentTint(Team team) => teamAccentColor(team).withOpacity(0.12);
+Color teamAccentTint(Team team) =>
+    teamAccentColor(team).withValues(alpha: 0.12);
 
 ThemeData buildLaunchpadTheme() {
   const background = Color(0xFF0D1117);

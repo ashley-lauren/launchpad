@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/launchpad_models.dart';
 import '../../services/launchpad_controller.dart';
 import '../theme.dart';
 
@@ -21,7 +22,9 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
   @override
   void initState() {
     super.initState();
-    _teamId = widget.controller.state.teams.first.id;
+    _teamId = widget.controller.state.teams.isEmpty
+        ? null
+        : widget.controller.state.teams.first.id;
     _answerController.addListener(() => setState(() {}));
   }
 
@@ -34,6 +37,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
   @override
   Widget build(BuildContext context) {
     final state = widget.controller.state;
+    final selectedTeam = _selectedTeam(state);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Center(
@@ -58,7 +62,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'submit.answer',
+                            'Submit Answer',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
@@ -70,56 +74,47 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                             style: const TextStyle(color: Color(0xFF8B949E)),
                           ),
                           const SizedBox(height: 22),
-                          Builder(builder: (context) {
-                            final selectedTeam = state.teams.firstWhere(
-                              (team) => team.id == _teamId,
-                              orElse: () => state.teams.first,
-                            );
-                            final accent = teamAccentColor(selectedTeam);
-                            return DropdownButtonFormField<String>(
-                              value: _teamId,
-                              items: state.teams
-                                  .map(
-                                    (team) => DropdownMenuItem(
-                                      value: team.id,
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 10,
-                                            height: 10,
-                                            decoration: BoxDecoration(
-                                              color: teamAccentColor(team),
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(child: Text(team.name)),
-                                        ],
+                          if (state.teams.isEmpty) ...[
+                            const _NoTeamsMessage(),
+                            const SizedBox(height: 22),
+                          ] else
+                            Builder(builder: (context) {
+                              final accent = teamAccentColor(selectedTeam!);
+                              return DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                value: selectedTeam.id,
+                                items: state.teams
+                                    .map(
+                                      (team) => DropdownMenuItem(
+                                        value: team.id,
+                                        child: Text(
+                                          team.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) =>
+                                    setState(() => _teamId = value),
+                                decoration: InputDecoration(
+                                  labelText: 'Team',
+                                  filled: true,
+                                  fillColor: accent.withValues(alpha: 0.08),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: accent.withValues(alpha: 0.35),
                                     ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) =>
-                                  setState(() => _teamId = value),
-                              decoration: InputDecoration(
-                                labelText: 'Team',
-                                filled: true,
-                                fillColor: accent.withOpacity(0.08),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: accent.withOpacity(0.35),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: accent.withValues(alpha: 0.65),
+                                    ),
                                   ),
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: accent.withOpacity(0.65),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
                           const SizedBox(height: 14),
                           TextField(
                             controller: _answerController,
@@ -132,9 +127,57 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                             ),
                           ),
                           const SizedBox(height: 14),
+                          const Text(
+                            'Confidence',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
                           SegmentedButton<String>(
+                            showSelectedIcon: false,
+                            style: ButtonStyle(
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return Color(0xFF79C0FF)
+                                      .withValues(alpha: 0.06);
+                                }
+                                return const Color(0xFF0D1117);
+                              }),
+                              foregroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return const Color(0xFFE6EDF3);
+                                }
+                                return const Color(0xFF8B949E);
+                              }),
+                              side: WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return BorderSide(
+                                    color: const Color(0xFF79C0FF)
+                                        .withValues(alpha: 0.35),
+                                  );
+                                }
+                                return const BorderSide(
+                                  color: Color(0xFF30363D),
+                                );
+                              }),
+                              shape: WidgetStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              textStyle: WidgetStateProperty.all(
+                                const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                             segments: const [
-                              ButtonSegment(value: 'Low', label: Text('Low')),
+                              ButtonSegment(
+                                value: 'Low',
+                                label: Text('Low'),
+                              ),
                               ButtonSegment(
                                 value: 'Medium',
                                 label: Text('Medium'),
@@ -152,11 +195,12 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _answerController.text.trim().isEmpty
+                              onPressed: selectedTeam == null ||
+                                      _answerController.text.trim().isEmpty
                                   ? null
                                   : () async {
                                       await widget.controller.submitAnswer(
-                                        teamId: _teamId!,
+                                        teamId: selectedTeam.id,
                                         answer: _answerController.text.trim(),
                                         confidence: _confidence,
                                       );
@@ -176,6 +220,36 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
       ),
     );
   }
+
+  Team? _selectedTeam(LaunchpadState state) {
+    if (state.teams.isEmpty) return null;
+    for (final team in state.teams) {
+      if (team.id == _teamId) return team;
+    }
+    return state.teams.first;
+  }
+}
+
+class _NoTeamsMessage extends StatelessWidget {
+  const _NoTeamsMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color(0xFF0D1117),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        border: Border.fromBorderSide(BorderSide(color: Color(0xFF30363D))),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(14),
+        child: Text(
+          'No teams are available yet. Add teams in the Teacher tab before submitting an answer.',
+          style: TextStyle(color: Color(0xFF8B949E)),
+        ),
+      ),
+    );
+  }
 }
 
 class _Confirmation extends StatelessWidget {
@@ -190,7 +264,7 @@ class _Confirmation extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'answer.received',
+          'Answer.submitted',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 10),
