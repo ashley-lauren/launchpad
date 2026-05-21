@@ -1,3 +1,8 @@
+// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
+
+import 'dart:async';
+import 'dart:html' as html;
+
 import 'package:flutter/material.dart';
 
 import '../../models/launchpad_models.dart';
@@ -61,6 +66,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               ),
               const SizedBox(height: 18),
               _TimerControls(controller: widget.controller),
+              const SizedBox(height: 18),
+              _LessonImportPanel(controller: widget.controller),
+              const SizedBox(height: 18),
+              _LessonFlowPanel(controller: widget.controller),
               const SizedBox(height: 18),
               const _AmbientSoon(),
             ],
@@ -227,6 +236,174 @@ class _TimerControls extends StatelessWidget {
               child: const Text('Start'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LessonImportPanel extends StatelessWidget {
+  const _LessonImportPanel({required this.controller});
+
+  final LaunchpadController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Import Lesson JSON',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+            ),
+            OutlinedButton(
+              onPressed: () => _pickAndImport(context),
+              child: const Text('Choose JSON'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndImport(BuildContext context) async {
+    final input = html.FileUploadInputElement()..accept = '.json,application/json';
+    input.click();
+    await input.onChange.first;
+    final file = input.files?.isEmpty == false ? input.files!.first : null;
+    if (file == null) return;
+
+    try {
+      final raw = await _readFileAsText(file);
+      await controller.importLessonJson(raw);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lesson JSON imported.')),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not import lesson JSON: $error')),
+        );
+      }
+    }
+  }
+
+  Future<String> _readFileAsText(html.File file) {
+    final completer = Completer<String>();
+    final reader = html.FileReader();
+    reader.onLoad.first.then((_) {
+      completer.complete(reader.result?.toString() ?? '');
+    });
+    reader.onError.first.then((_) {
+      completer.completeError('The selected file could not be read.');
+    });
+    reader.readAsText(file);
+    return completer.future;
+  }
+}
+
+class _LessonFlowPanel extends StatelessWidget {
+  const _LessonFlowPanel({required this.controller});
+
+  final LaunchpadController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = controller.state;
+    final lesson = state.activeLesson;
+    final phases = lesson?.phases ?? const <LessonPhase>[];
+    final currentPhase = state.currentPhase;
+    final currentIndex = phases.isEmpty
+        ? 0
+        : state.currentPhaseIndex.clamp(0, phases.length - 1);
+
+    return Card(
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Lesson Flow',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                lesson?.lessonInfo.title ?? 'No active lesson',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                currentPhase == null
+                    ? 'No phase selected'
+                    : '${currentPhase.title} / ${currentPhase.type}',
+                style: const TextStyle(color: Color(0xFF8B949E)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                phases.isEmpty
+                    ? 'Phase 0 of 0'
+                    : 'Phase ${currentIndex + 1} of ${phases.length}',
+                style: const TextStyle(color: Color(0xFF8B949E)),
+              ),
+              if (phases.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: currentIndex,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Jump to phase'),
+                  items: [
+                    for (var i = 0; i < phases.length; i++)
+                      DropdownMenuItem(
+                        value: i,
+                        child: Text(
+                          '${i + 1}. ${phases[i].title}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) controller.goToPhase(value);
+                  },
+                ),
+              ],
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    onPressed:
+                        currentIndex <= 0 ? null : controller.previousPhase,
+                    child: const Text('Previous Phase'),
+                  ),
+                  ElevatedButton(
+                    onPressed: phases.isEmpty || currentIndex >= phases.length - 1
+                        ? null
+                        : controller.nextPhase,
+                    child: Text(
+                      phases.isNotEmpty && currentIndex >= phases.length - 1
+                          ? 'End Lesson'
+                          : 'Next Phase',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        phases.isEmpty ? null : controller.restartPhaseTimer,
+                    child: const Text('Restart Phase Timer'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

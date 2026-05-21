@@ -38,6 +38,23 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
   Widget build(BuildContext context) {
     final state = widget.controller.state;
     final selectedTeam = _selectedTeam(state);
+    final currentPhase = state.currentPhase;
+    final submission = currentPhase?.submission;
+    final prompt = currentPhase?.prompt.isNotEmpty == true
+        ? currentPhase!.prompt
+        : state.warmup.prompt;
+
+    if (submission == null || !submission.enabled) {
+      return const _PhaseSubmissionPlaceholder(
+        message: 'No team submission needed for this phase.',
+      );
+    }
+    if (submission.mode == 'individual') {
+      return const _PhaseSubmissionPlaceholder(
+        message: 'Individual reflection coming soon.',
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Center(
@@ -70,7 +87,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            state.warmup.prompt,
+                            prompt,
                             style: const TextStyle(color: Color(0xFF8B949E)),
                           ),
                           const SizedBox(height: 22),
@@ -126,71 +143,74 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                   'Explain the strategy your team would try first...',
                             ),
                           ),
-                          const SizedBox(height: 14),
-                          const Text(
-                            'Confidence',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          SegmentedButton<String>(
-                            showSelectedIcon: false,
-                            style: ButtonStyle(
-                              backgroundColor:
-                                  WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return Color(0xFF79C0FF)
-                                      .withValues(alpha: 0.06);
-                                }
-                                return const Color(0xFF0D1117);
-                              }),
-                              foregroundColor:
-                                  WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return const Color(0xFFE6EDF3);
-                                }
-                                return const Color(0xFF8B949E);
-                              }),
-                              side: WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return BorderSide(
-                                    color: const Color(0xFF79C0FF)
-                                        .withValues(alpha: 0.35),
-                                  );
-                                }
-                                return const BorderSide(
-                                  color: Color(0xFF30363D),
-                                );
-                              }),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                              textStyle: WidgetStateProperty.all(
-                                const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                          if (submission.confidenceSelector) ...[
+                            const SizedBox(height: 14),
+                            const Text(
+                              'Confidence',
+                              style: TextStyle(fontWeight: FontWeight.w700),
                             ),
-                            segments: const [
-                              ButtonSegment(
-                                value: 'Low',
-                                label: Text('Low'),
+                            const SizedBox(height: 8),
+                            SegmentedButton<String>(
+                              showSelectedIcon: false,
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return const Color(0xFF79C0FF)
+                                        .withValues(alpha: 0.06);
+                                  }
+                                  return const Color(0xFF0D1117);
+                                }),
+                                foregroundColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return const Color(0xFFE6EDF3);
+                                  }
+                                  return const Color(0xFF8B949E);
+                                }),
+                                side:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return BorderSide(
+                                      color: const Color(0xFF79C0FF)
+                                          .withValues(alpha: 0.35),
+                                    );
+                                  }
+                                  return const BorderSide(
+                                    color: Color(0xFF30363D),
+                                  );
+                                }),
+                                shape: WidgetStateProperty.all(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                ),
+                                textStyle: WidgetStateProperty.all(
+                                  const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                              ButtonSegment(
-                                value: 'Medium',
-                                label: Text('Medium'),
-                              ),
-                              ButtonSegment(
-                                value: 'High',
-                                label: Text('High'),
-                              ),
-                            ],
-                            selected: {_confidence},
-                            onSelectionChanged: (value) =>
-                                setState(() => _confidence = value.first),
-                          ),
+                              segments: const [
+                                ButtonSegment(
+                                  value: 'Low',
+                                  label: Text('Low'),
+                                ),
+                                ButtonSegment(
+                                  value: 'Medium',
+                                  label: Text('Medium'),
+                                ),
+                                ButtonSegment(
+                                  value: 'High',
+                                  label: Text('High'),
+                                ),
+                              ],
+                              selected: {_confidence},
+                              onSelectionChanged: (value) =>
+                                  setState(() => _confidence = value.first),
+                            ),
+                          ],
                           const SizedBox(height: 22),
                           SizedBox(
                             width: double.infinity,
@@ -202,7 +222,10 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                       await widget.controller.submitAnswer(
                                         teamId: selectedTeam.id,
                                         answer: _answerController.text.trim(),
-                                        confidence: _confidence,
+                                        confidence: submission
+                                                .confidenceSelector
+                                            ? _confidence
+                                            : 'Not collected',
                                       );
                                       if (mounted) {
                                         setState(() => _submitted = true);
@@ -227,6 +250,33 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
       if (team.id == _teamId) return team;
     }
     return state.teams.first;
+  }
+}
+
+class _PhaseSubmissionPlaceholder extends StatelessWidget {
+  const _PhaseSubmissionPlaceholder({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Text(
+                message,
+                style: const TextStyle(color: Color(0xFF8B949E)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -264,7 +314,7 @@ class _Confirmation extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Answer.submitted',
+          'Answer submitted',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 10),

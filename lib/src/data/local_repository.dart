@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/launchpad_models.dart';
@@ -11,6 +12,7 @@ class LocalRepository implements LaunchpadRepository {
   final SharedPreferences _prefs;
 
   static const _stateKey = 'launchpad.local.state.v1';
+  static const sampleLessonAssetPath = 'lib/src/data/sample_lesson_import.json';
 
   Future<void> ensureSeeded() async {
     if (_prefs.containsKey(_stateKey)) return;
@@ -115,6 +117,7 @@ class LocalRepository implements LaunchpadRepository {
       ),
     ];
 
+    final lesson = await loadSampleLesson();
     final state = LaunchpadState(
       launchClass: classes.first,
       classes: classes,
@@ -137,8 +140,19 @@ class LocalRepository implements LaunchpadRepository {
       teams: teams,
       submissions: const [],
       pointEvents: const [],
+      activeLesson: lesson,
+      currentPhaseIndex: 0,
     );
     await _writeState(state);
+  }
+
+  Future<Lesson?> loadSampleLesson() async {
+    try {
+      final raw = await rootBundle.loadString(sampleLessonAssetPath);
+      return Lesson.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -155,7 +169,7 @@ class LocalRepository implements LaunchpadRepository {
             .toList()
         : [launchClass];
 
-    return LaunchpadState(
+    var state = LaunchpadState(
       launchClass: launchClass,
       classes: classes,
       warmup: Warmup.fromJson(json['warmup'] as Map<String, dynamic>),
@@ -168,7 +182,19 @@ class LocalRepository implements LaunchpadRepository {
       pointEvents: (json['point_events'] as List)
           .map((item) => PointEvent.fromJson(item as Map<String, dynamic>))
           .toList(),
+      activeLesson: json['active_lesson'] == null
+          ? null
+          : Lesson.fromJson(json['active_lesson'] as Map<String, dynamic>),
+      currentPhaseIndex: json['current_phase_index'] as int? ?? 0,
     );
+    if (state.activeLesson == null) {
+      final lesson = await loadSampleLesson();
+      if (lesson != null) {
+        state = state.copyWith(activeLesson: lesson, currentPhaseIndex: 0);
+        await _writeState(state);
+      }
+    }
+    return state;
   }
 
   @override
@@ -194,6 +220,8 @@ class LocalRepository implements LaunchpadRepository {
         teams: teams,
         submissions: state.submissions,
         pointEvents: [...state.pointEvents, event],
+        activeLesson: state.activeLesson,
+        currentPhaseIndex: state.currentPhaseIndex,
       ),
     );
   }
@@ -221,6 +249,8 @@ class LocalRepository implements LaunchpadRepository {
         teams: state.teams,
         submissions: submissions,
         pointEvents: state.pointEvents,
+        activeLesson: state.activeLesson,
+        currentPhaseIndex: state.currentPhaseIndex,
       ),
     );
   }
@@ -236,6 +266,8 @@ class LocalRepository implements LaunchpadRepository {
         teams: teams,
         submissions: state.submissions,
         pointEvents: state.pointEvents,
+        activeLesson: state.activeLesson,
+        currentPhaseIndex: state.currentPhaseIndex,
       ),
     );
   }
@@ -251,8 +283,28 @@ class LocalRepository implements LaunchpadRepository {
         teams: state.teams,
         submissions: state.submissions,
         pointEvents: state.pointEvents,
+        activeLesson: state.activeLesson,
+        currentPhaseIndex: state.currentPhaseIndex,
       ),
     );
+  }
+
+  Future<void> saveLessonState({
+    required Lesson lesson,
+    required int currentPhaseIndex,
+  }) async {
+    final state = await loadState();
+    await _writeState(
+      state.copyWith(
+        activeLesson: lesson,
+        currentPhaseIndex: currentPhaseIndex,
+      ),
+    );
+  }
+
+  Future<void> saveCurrentPhaseIndex(int currentPhaseIndex) async {
+    final state = await loadState();
+    await _writeState(state.copyWith(currentPhaseIndex: currentPhaseIndex));
   }
 
   Future<void> markSynced({
@@ -279,6 +331,8 @@ class LocalRepository implements LaunchpadRepository {
           }
           return event.copyWith(syncedAt: syncedAt);
         }).toList(),
+        activeLesson: state.activeLesson,
+        currentPhaseIndex: state.currentPhaseIndex,
       ),
     );
   }
@@ -296,6 +350,8 @@ class LocalRepository implements LaunchpadRepository {
             state.submissions.map((submission) => submission.toJson()).toList(),
         'point_events':
             state.pointEvents.map((event) => event.toJson()).toList(),
+        'active_lesson': state.activeLesson?.toJson(),
+        'current_phase_index': state.currentPhaseIndex,
       }),
     );
   }

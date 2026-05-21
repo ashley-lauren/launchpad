@@ -1,0 +1,236 @@
+{
+  "lessonInfo": {
+    "title": "Intro to Algorithms & Debugging",
+    "course": "Computer Science 1",
+    "period": "Period 1",
+    "date": "2026-09-03",
+    "teacher": "Ashley Lauren",
+    "themeColor": "#4FD1FF",
+    "estimatedDurationMinutes": 30,
+    "lessonMode": "collaborative_runtime"
+  },
+
+  "displaySettings": {
+    "showLeaderboard": true,
+    "showTeamMap": true,
+    "showAgenda": true,
+    "showClock": true,
+    "ambientModeEnabled": false,
+    "defaultCountdownSound": "soft_chime",
+    "phaseTransitionAnimation": "slide"
+  },
+
+  "standards": [
+    {
+      "framework": "TEKS",
+      "code": "126.32.c.1A",
+      "description": "Apply problem-solving strategies to solve computational problems"
+    },
+    {
+      "framework": "TEKS",
+      "code": "126.32.c.5A",
+      "description": "Develop algorithms to solve problems"
+    }
+  ],
+
+  "learningObjectives": [
+    "Understand what an algorithm is",
+    "Practice debugging logical problems collaboratively",
+    "Explain reasoning clearly as a team",
+    "Recognize the importance of precise instructions in programming"
+  ],
+
+  "successCriteria": [
+    "Students can define an algorithm in their own words",
+    "Students can identify ambiguous instructions",
+    "Students can explain at least one debugging strategy",
+    "Students can collaborate respectfully and contribute ideas"
+  ],
+
+  "vocabulary": [
+    "algorithm",
+    "debugging",
+    "edge case",
+    "iteration",
+    "logic",
+    "input",
+    "output"
+  ],
+
+  "materials": [
+    "Chromebooks",
+    "Projector",
+    "Whiteboard",
+    "Launchpad display screen"
+  ],
+
+  "differentiation": {
+    "supports": [
+      "Sentence stems for discussion",
+      "Team collaboration before whole-class sharing",
+      "Teacher circulation prompts",
+      "Visual countdown timers"
+    ],
+    "extensions": [
+      "Optimize instructions for efficiency",
+      "Identify edge cases",
+      "Design a more reliable algorithm",
+      "Compare human assumptions vs computer assumptions"
+    ]
+  },
+
+  "teacherMoves": {
+    "circulateFocus": [
+      "Listen for assumptions students are making",
+      "Encourage quieter students to contribute",
+      "Praise useful mistakes and debugging attempts",
+      "Ask students to explain reasoning, not just answers"
+    ],
+    "coldCallMode": "team_random",
+    "helpQueueEnabled": true,
+    "preferredPacingStyle": "fast_transitions"
+  },
+
+  "pointRewards": [
+    {
+      "id": "creative_reasoning",
+      "label": "Creative Reasoning",
+      "points": 2
+    },
+    {
+      "id": "great_collaboration",
+      "label": "Great Collaboration",
+      "points": 2
+    },
+    {
+      "id": "helpful_debugging",
+      "label": "Helpful Debugging",
+      "points": 1
+    },
+    {
+      "id": "excellent_question",
+      "label": "Excellent Question",
+      "points": 1
+    }
+  ],
+
+  "phases": [
+    {
+      "id": "warmup_01",
+      "type": "warmup",
+      "title": "Warm-up Reasoning Sprint",
+      "durationSeconds": 300,
+
+      "prompt": "A self-driving car detects an obstacle with 78% confidence. Should it brake immediately, gather more data, or do something else? Why?",
+
+      "instructions": [
+        "Discuss with your team",
+        "Submit one team answer",
+        "Be ready to explain your reasoning"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "team",
+        "confidenceSelector": true
+      },
+
+      "teacherNotes": [
+        "Look for tradeoff reasoning",
+        "Encourage multiple valid approaches",
+        "Avoid revealing a single 'correct' answer"
+      ]
+    },
+
+    {
+      "id": "mini_lesson_01",
+      "type": "instruction",
+      "title": "What Is an Algorithm?",
+      "durationSeconds": 420,
+
+      "teacherNotes": [
+        "Define algorithms as step-by-step procedures",
+        "Use a simple real-world example briefly",
+        "Transition quickly into CS examples",
+        "Emphasize precision and ambiguity"
+      ],
+
+      "display": {
+        "showObjectives": true,
+        "showTimer": true,
+        "showVocabulary": true
+      }
+    },
+
+    {
+      "id": "challenge_01",
+      "type": "challenge",
+      "title": "Debug the Instructions",
+      "durationSeconds": 480,
+
+      "prompt": "Write instructions for a robot to make toast. Another team will follow them literally.",
+
+      "instructions": [
+        "Be extremely specific",
+        "Think like a computer",
+        "Consider edge cases",
+        "Test your algorithm"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "team"
+      },
+
+      "teacherNotes": [
+        "Look for skipped assumptions",
+        "Celebrate funny failures",
+        "Connect mistakes to real debugging"
+      ]
+    },
+
+    {
+      "id": "discussion_01",
+      "type": "discussion",
+      "title": "Class Debrief",
+      "durationSeconds": 300,
+
+      "discussionPrompts": [
+        "What mistakes happened most often?",
+        "Why are computers bad at assumptions?",
+        "How does debugging help programmers?",
+        "What made some instructions more reliable?"
+      ],
+
+      "display": {
+        "showLeaderboard": false,
+        "showTeamMap": true
+      }
+    },
+
+    {
+      "id": "reflection_01",
+      "type": "reflection",
+      "title": "Exit Reflection",
+      "durationSeconds": 180,
+
+      "reflectionQuestions": [
+        "What was one thing your team improved today?",
+        "What confused you most?",
+        "How confident do you feel about algorithms so far?",
+        "What is one thing you want to learn next?"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "individual"
+      },
+
+      "teacherNotes": [
+        "Use responses to guide tomorrow's pacing",
+        "Identify common misconceptions",
+        "Look for students needing extra support"
+      ]
+    }
+  ]
+}

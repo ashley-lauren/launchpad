@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -28,9 +29,12 @@ class LaunchpadController extends ChangeNotifier {
   int get secondsRemaining => _secondsRemaining;
   bool get timerRunning => _timerRunning;
   SyncStatus get syncStatus => syncService.status;
+  Lesson? get activeLesson => state.activeLesson;
+  LessonPhase? get currentPhase => state.currentPhase;
 
   Future<void> load() async {
     _state = await localRepository.loadState();
+    _secondsRemaining = _durationForCurrentPhase();
     notifyListeners();
   }
 
@@ -48,6 +52,8 @@ class LaunchpadController extends ChangeNotifier {
       teams: state.teams,
       submissions: state.submissions,
       pointEvents: state.pointEvents,
+      activeLesson: state.activeLesson,
+      currentPhaseIndex: state.currentPhaseIndex,
     );
     notifyListeners();
   }
@@ -69,10 +75,48 @@ class LaunchpadController extends ChangeNotifier {
 
   void resetTimer() {
     _ticker?.cancel();
-    _secondsRemaining = 300;
+    _secondsRemaining = _durationForCurrentPhase();
     _timerRunning = false;
     notifyListeners();
   }
+
+  Future<void> importLessonJson(String rawJson) async {
+    final decoded = jsonDecode(rawJson);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Lesson JSON must be an object.');
+    }
+    final lesson = Lesson.fromJson(decoded);
+    if (lesson.phases.isEmpty) {
+      throw const FormatException('Lesson JSON must include at least one phase.');
+    }
+    _ticker?.cancel();
+    await localRepository.saveLessonState(
+      lesson: lesson,
+      currentPhaseIndex: 0,
+    );
+    await load();
+    _secondsRemaining = _durationForCurrentPhase();
+    _timerRunning = false;
+    notifyListeners();
+  }
+
+  Future<void> goToPhase(int phaseIndex) async {
+    final lesson = state.activeLesson;
+    if (lesson == null || lesson.phases.isEmpty) return;
+    final nextIndex = phaseIndex.clamp(0, lesson.phases.length - 1);
+    _ticker?.cancel();
+    await localRepository.saveCurrentPhaseIndex(nextIndex);
+    await load();
+    _secondsRemaining = _durationForCurrentPhase();
+    _timerRunning = false;
+    notifyListeners();
+  }
+
+  Future<void> nextPhase() => goToPhase(state.currentPhaseIndex + 1);
+
+  Future<void> previousPhase() => goToPhase(state.currentPhaseIndex - 1);
+
+  void restartPhaseTimer() => resetTimer();
 
   Future<void> updateWarmup({
     required String prompt,
@@ -106,7 +150,7 @@ class LaunchpadController extends ChangeNotifier {
     await localRepository.saveSubmission(
       Submission(
         id: id,
-        warmupId: state.warmup.id,
+        warmupId: state.currentPhase?.id ?? state.warmup.id,
         teamId: teamId,
         answer: answer,
         confidence: confidence,
@@ -162,6 +206,12 @@ class LaunchpadController extends ChangeNotifier {
     await localRepository.resetDemoData();
     await load();
     await syncService.markPending();
+  }
+
+  int _durationForCurrentPhase() {
+    final duration = state.currentPhase?.durationSeconds;
+    if (duration != null && duration > 0) return duration;
+    return 300;
   }
 
   @override

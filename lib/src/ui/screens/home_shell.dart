@@ -34,7 +34,14 @@ class HomeShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final launchClass = controller.state.launchClass;
-    final titleLabel = '${launchClass.name} · ${_formatDate(DateTime.now())}';
+    final lessonInfo = controller.state.activeLesson?.lessonInfo;
+    final titleLabel = lessonInfo == null
+        ? '${launchClass.name} · ${_formatDate(DateTime.now())}'
+        : [
+            if (lessonInfo.course.isNotEmpty) lessonInfo.course,
+            if (lessonInfo.period.isNotEmpty) lessonInfo.period,
+            if (lessonInfo.date.isNotEmpty) lessonInfo.date,
+          ].join(' · ');
 
     return DefaultTabController(
       length: 3,

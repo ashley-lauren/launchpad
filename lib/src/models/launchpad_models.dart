@@ -18,6 +18,197 @@ class AgendaItem {
       };
 }
 
+class Lesson {
+  const Lesson({
+    required this.lessonInfo,
+    required this.displaySettings,
+    required this.standards,
+    required this.learningObjectives,
+    required this.successCriteria,
+    required this.vocabulary,
+    required this.materials,
+    required this.differentiation,
+    required this.teacherMoves,
+    required this.pointRewards,
+    required this.phases,
+    required this.rawJson,
+  });
+
+  final LessonInfo lessonInfo;
+  final DisplaySettings displaySettings;
+  final List<Map<String, dynamic>> standards;
+  final List<String> learningObjectives;
+  final List<String> successCriteria;
+  final List<String> vocabulary;
+  final List<String> materials;
+  final Map<String, dynamic> differentiation;
+  final Map<String, dynamic> teacherMoves;
+  final List<Map<String, dynamic>> pointRewards;
+  final List<LessonPhase> phases;
+  final Map<String, dynamic> rawJson;
+
+  factory Lesson.fromJson(Map<String, dynamic> json) {
+    return Lesson(
+      lessonInfo: LessonInfo.fromJson(_asMap(json['lessonInfo'])),
+      displaySettings: DisplaySettings.fromJson(
+        _asMap(json['displaySettings']),
+      ),
+      standards: _asMapList(json['standards']),
+      learningObjectives: _asStringList(json['learningObjectives']),
+      successCriteria: _asStringList(json['successCriteria']),
+      vocabulary: _asStringList(json['vocabulary']),
+      materials: _asStringList(json['materials']),
+      differentiation: _asMap(json['differentiation']),
+      teacherMoves: _asMap(json['teacherMoves']),
+      pointRewards: _asMapList(json['pointRewards']),
+      phases: _asMapList(json['phases'])
+          .map((item) => LessonPhase.fromJson(item))
+          .toList(),
+      rawJson: Map<String, dynamic>.from(json),
+    );
+  }
+
+  Map<String, dynamic> toJson() => rawJson;
+}
+
+class LessonInfo {
+  const LessonInfo({
+    required this.title,
+    required this.course,
+    required this.period,
+    required this.date,
+    required this.rawJson,
+  });
+
+  final String title;
+  final String course;
+  final String period;
+  final String date;
+  final Map<String, dynamic> rawJson;
+
+  factory LessonInfo.fromJson(Map<String, dynamic> json) => LessonInfo(
+        title: json['title']?.toString() ?? 'Untitled Lesson',
+        course: json['course']?.toString() ?? '',
+        period: json['period']?.toString() ?? '',
+        date: json['date']?.toString() ?? '',
+        rawJson: Map<String, dynamic>.from(json),
+      );
+}
+
+class DisplaySettings {
+  const DisplaySettings({
+    required this.showLeaderboard,
+    required this.showTeamMap,
+    required this.showAgenda,
+    required this.showClock,
+    required this.rawJson,
+  });
+
+  final bool showLeaderboard;
+  final bool showTeamMap;
+  final bool showAgenda;
+  final bool showClock;
+  final Map<String, dynamic> rawJson;
+
+  factory DisplaySettings.fromJson(Map<String, dynamic> json) =>
+      DisplaySettings(
+        showLeaderboard: json['showLeaderboard'] as bool? ?? true,
+        showTeamMap: json['showTeamMap'] as bool? ?? true,
+        showAgenda: json['showAgenda'] as bool? ?? true,
+        showClock: json['showClock'] as bool? ?? true,
+        rawJson: Map<String, dynamic>.from(json),
+      );
+}
+
+class LessonSubmissionSettings {
+  const LessonSubmissionSettings({
+    required this.enabled,
+    required this.mode,
+    required this.confidenceSelector,
+    required this.rawJson,
+  });
+
+  final bool enabled;
+  final String mode;
+  final bool confidenceSelector;
+  final Map<String, dynamic> rawJson;
+
+  factory LessonSubmissionSettings.fromJson(Map<String, dynamic> json) =>
+      LessonSubmissionSettings(
+        enabled: json['enabled'] as bool? ?? false,
+        mode: json['mode']?.toString() ?? 'team',
+        confidenceSelector: json['confidenceSelector'] as bool? ?? false,
+        rawJson: Map<String, dynamic>.from(json),
+      );
+}
+
+class LessonPhase {
+  const LessonPhase({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.durationSeconds,
+    required this.prompt,
+    required this.instructions,
+    required this.submission,
+    required this.teacherNotes,
+    required this.display,
+    required this.discussionPrompts,
+    required this.reflectionQuestions,
+    required this.rawJson,
+  });
+
+  final String id;
+  final String type;
+  final String title;
+  final int durationSeconds;
+  final String prompt;
+  final List<String> instructions;
+  final LessonSubmissionSettings submission;
+  final List<String> teacherNotes;
+  final Map<String, dynamic> display;
+  final List<String> discussionPrompts;
+  final List<String> reflectionQuestions;
+  final Map<String, dynamic> rawJson;
+
+  factory LessonPhase.fromJson(Map<String, dynamic> json) {
+    return LessonPhase(
+      id: json['id']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'phase',
+      title: json['title']?.toString() ?? 'Untitled Phase',
+      durationSeconds: json['durationSeconds'] as int? ?? 300,
+      prompt: json['prompt']?.toString() ?? '',
+      instructions: _asStringList(json['instructions']),
+      submission: LessonSubmissionSettings.fromJson(
+        _asMap(json['submission']),
+      ),
+      teacherNotes: _asStringList(json['teacherNotes']),
+      display: _asMap(json['display']),
+      discussionPrompts: _asStringList(json['discussionPrompts']),
+      reflectionQuestions: _asStringList(json['reflectionQuestions']),
+      rawJson: Map<String, dynamic>.from(json),
+    );
+  }
+}
+
+Map<String, dynamic> _asMap(Object? value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) {
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return const {};
+}
+
+List<Map<String, dynamic>> _asMapList(Object? value) {
+  if (value is! List) return const [];
+  return value.map((item) => _asMap(item)).toList();
+}
+
+List<String> _asStringList(Object? value) {
+  if (value is! List) return const [];
+  return value.map((item) => item.toString()).toList();
+}
+
 class LaunchClass {
   const LaunchClass({
     required this.id,
@@ -296,6 +487,8 @@ class LaunchpadState {
     required this.teams,
     required this.submissions,
     required this.pointEvents,
+    this.activeLesson,
+    this.currentPhaseIndex = 0,
   });
 
   final LaunchClass launchClass;
@@ -304,6 +497,15 @@ class LaunchpadState {
   final List<Team> teams;
   final List<Submission> submissions;
   final List<PointEvent> pointEvents;
+  final Lesson? activeLesson;
+  final int currentPhaseIndex;
+
+  LessonPhase? get currentPhase {
+    final lesson = activeLesson;
+    if (lesson == null || lesson.phases.isEmpty) return null;
+    final index = currentPhaseIndex.clamp(0, lesson.phases.length - 1);
+    return lesson.phases[index];
+  }
 
   LaunchpadState copyWith({
     LaunchClass? launchClass,
@@ -312,6 +514,8 @@ class LaunchpadState {
     List<Team>? teams,
     List<Submission>? submissions,
     List<PointEvent>? pointEvents,
+    Lesson? activeLesson,
+    int? currentPhaseIndex,
   }) {
     return LaunchpadState(
       launchClass: launchClass ?? this.launchClass,
@@ -320,6 +524,8 @@ class LaunchpadState {
       teams: teams ?? this.teams,
       submissions: submissions ?? this.submissions,
       pointEvents: pointEvents ?? this.pointEvents,
+      activeLesson: activeLesson ?? this.activeLesson,
+      currentPhaseIndex: currentPhaseIndex ?? this.currentPhaseIndex,
     );
   }
 }
