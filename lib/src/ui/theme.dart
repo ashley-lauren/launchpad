@@ -47,7 +47,7 @@ ThemeData buildLaunchpadTheme() {
       onSurface: Color(0xFFE6EDF3),
     ),
     fontFamily: 'monospace',
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -95,7 +95,7 @@ ThemeData buildLaunchpadTheme() {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: blue),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: cyan,
       unselectedLabelColor: Color(0xFF8B949E),
       indicatorColor: cyan,
