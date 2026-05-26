@@ -33,13 +33,6 @@ class ClassroomDisplayScreen extends StatelessWidget {
         : currentPhase.prompt.isNotEmpty
             ? currentPhase.prompt
             : currentPhase.title;
-    final expectations = currentPhase?.instructions.isNotEmpty == true
-        ? currentPhase!.instructions
-        : const [
-            'Discuss with your team',
-            'Submit one team answer',
-            'Be ready to explain your reasoning',
-          ];
     final phaseDisplay = currentPhase?.display ?? const {};
     final displaySettings = lesson?.displaySettings;
     final showTeamMap = phaseDisplay['showTeamMap'] as bool? ??
@@ -68,9 +61,9 @@ class ClassroomDisplayScreen extends StatelessWidget {
                 ),
               'warmup' => _WarmupPhaseDisplay(
                   controller: controller,
+                  phase: currentPhase,
                   prompt: prompt,
                   agenda: agenda,
-                  expectations: expectations,
                   currentAgendaIndex: currentAgendaIndex,
                   wide: wide,
                   showTeamMap: showTeamMap,
@@ -95,9 +88,9 @@ class ClassroomDisplayScreen extends StatelessWidget {
 class _WarmupPhaseDisplay extends StatelessWidget {
   const _WarmupPhaseDisplay({
     required this.controller,
+    required this.phase,
     required this.prompt,
     required this.agenda,
-    required this.expectations,
     required this.currentAgendaIndex,
     required this.wide,
     required this.showTeamMap,
@@ -107,9 +100,9 @@ class _WarmupPhaseDisplay extends StatelessWidget {
   });
 
   final LaunchpadController controller;
+  final LessonPhase? phase;
   final String prompt;
   final List<AgendaItem> agenda;
-  final List<String> expectations;
   final int? currentAgendaIndex;
   final bool wide;
   final bool showTeamMap;
@@ -119,6 +112,14 @@ class _WarmupPhaseDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final keyActions = phase?.keyActions.isNotEmpty == true
+        ? phase!.keyActions
+        : const [
+            'Discuss with your team',
+            'Submit one team answer',
+            'Be ready to explain your reasoning',
+          ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -126,7 +127,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
           controller: controller,
           prompt: prompt,
           agenda: agenda,
-          expectations: expectations,
+          keyActions: keyActions,
           currentAgendaIndex: currentAgendaIndex,
         ),
         const SizedBox(height: 18),
@@ -164,14 +165,14 @@ class _HeroPanel extends StatelessWidget {
     required this.controller,
     required this.prompt,
     required this.agenda,
-    required this.expectations,
+    required this.keyActions,
     required this.currentAgendaIndex,
   });
 
   final LaunchpadController controller;
   final String prompt;
   final List<AgendaItem> agenda;
-  final List<String> expectations;
+  final List<String> keyActions;
   final int? currentAgendaIndex;
 
   @override
@@ -212,15 +213,17 @@ class _HeroPanel extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final expectation in expectations)
-                        _Expectation(expectation),
-                    ],
-                  ),
-                  const SizedBox(height: 48),
+                  if (keyActions.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final action in keyActions)
+                          _Expectation(action),
+                      ],
+                    ),
+                    const SizedBox(height: 48),
+                  ],
                   Text(
                     "Today's Agenda",
                     style: TextStyle(
@@ -276,7 +279,7 @@ class _InstructionPhaseDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentPhase = phase;
-    final notes = currentPhase?.teacherNotes ?? const <String>[];
+    final keyIdeas = currentPhase?.keyIdeas ?? const <String>[];
 
     return Card(
       child: Padding(
@@ -300,16 +303,16 @@ class _InstructionPhaseDisplay extends StatelessWidget {
                   ),
                   const SizedBox(height: 36),
                   Text(
-                    'Instruction Notes',
+                    'Key Ideas',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 14),
-                  if (notes.isEmpty)
+                  if (keyIdeas.isEmpty)
                     const Text(
-                      'No instruction notes for this phase.',
+                      'Focus on the key concepts being introduced.',
                       style: TextStyle(
                         color: Color(0xFF8B949E),
                         fontSize: 22,
@@ -320,11 +323,11 @@ class _InstructionPhaseDisplay extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final note in notes)
+                        for (final idea in keyIdeas)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
-                              '> $note',
+                              '• $idea',
                               style: const TextStyle(
                                 color: Color(0xFF8B949E),
                               ),
@@ -367,6 +370,7 @@ class _GenericPhaseDisplay extends StatelessWidget {
     final currentPhase = phase;
     final prompt = currentPhase?.prompt ?? '';
     final instructions = currentPhase?.instructions ?? const <String>[];
+    final keyActions = currentPhase?.keyActions ?? const <String>[];
 
     return Card(
       child: Padding(
@@ -407,6 +411,32 @@ class _GenericPhaseDisplay extends StatelessWidget {
                       children: [
                         for (final instruction in instructions)
                           _Expectation(instruction),
+                      ],
+                    ),
+                  ],
+                  if (keyActions.isNotEmpty) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      'Key Actions',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final action in keyActions)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              '• $action',
+                              style: const TextStyle(
+                                color: Color(0xFF8B949E),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ],

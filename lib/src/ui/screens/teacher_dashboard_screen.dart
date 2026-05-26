@@ -376,31 +376,13 @@ class _LessonFlowPanel extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  OutlinedButton(
-                    onPressed:
-                        currentIndex <= 0 ? null : controller.previousPhase,
-                    child: const Text('Previous Phase'),
-                  ),
-                  ElevatedButton(
-                    onPressed: phases.isEmpty || currentIndex >= phases.length - 1
-                        ? null
-                        : controller.nextPhase,
-                    child: Text(
-                      phases.isNotEmpty && currentIndex >= phases.length - 1
-                          ? 'End Lesson'
-                          : 'Next Phase',
-                    ),
-                  ),
-                  TextButton(
-                    onPressed:
-                        phases.isEmpty ? null : controller.restartPhaseTimer,
-                    child: const Text('Restart Phase Timer'),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed:
+                      phases.isEmpty ? null : controller.restartPhaseTimer,
+                  child: const Text('Restart Phase Timer'),
+                ),
               ),
             ],
           ),

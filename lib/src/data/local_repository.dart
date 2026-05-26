@@ -12,7 +12,7 @@ class LocalRepository implements LaunchpadRepository {
   final SharedPreferences _prefs;
 
   static const _stateKey = 'launchpad.local.state.v1';
-  static const sampleLessonAssetPath = 'lib/src/data/sample_lesson_import.json';
+  static const sampleLessonAssetPath = 'lib/src/data/dsisd-interview-lesson-plan.json';
 
   Future<void> ensureSeeded() async {
     if (_prefs.containsKey(_stateKey)) return;

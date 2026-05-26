@@ -73,6 +73,12 @@ class LaunchpadController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void pauseTimer() {
+    _timerRunning = false;
+    _ticker?.cancel();
+    notifyListeners();
+  }
+
   void resetTimer() {
     _ticker?.cancel();
     _secondsRemaining = _durationForCurrentPhase();

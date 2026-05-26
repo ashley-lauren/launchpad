@@ -1,0 +1,297 @@
+{
+  "lessonInfo": {
+    "title": "How Can Robots Use Sensors and Decision-Making Logic to Navigate Their Environment?",
+    "course": "Computer Science I",
+    "period": "STEM Block",
+    "date": "2026-09-03",
+    "teacher": "Ashley Lauren",
+    "themeColor": "#4FD1FF",
+    "estimatedDurationMinutes": 90,
+    "lessonMode": "collaborative_runtime"
+  },
+
+  "displaySettings": {
+    "showLeaderboard": true,
+    "showTeamMap": true,
+    "showAgenda": true,
+    "showClock": true,
+    "ambientModeEnabled": false,
+    "defaultCountdownSound": "soft_chime",
+    "phaseTransitionAnimation": "slide"
+  },
+
+  "standards": [
+    {
+      "framework": "TEKS",
+      "code": "4(A)",
+      "description": "Use program design problem-solving strategies to create program solutions"
+    },
+    {
+      "framework": "TEKS",
+      "code": "4(F)",
+      "description": "Design a solution to a problem"
+    },
+    {
+      "framework": "TEKS",
+      "code": "4(H)",
+      "description": "Identify and debug errors"
+    },
+    {
+      "framework": "TEKS",
+      "code": "4(S)",
+      "description": "Develop algorithms to decision-making problems using branching control statements"
+    }
+  ],
+
+  "learningObjectives": [
+    "Explain how robots use sensor input to make decisions",
+    "Design a branching logic algorithm for robot navigation",
+    "Collaboratively debug and improve robot behaviors",
+    "Apply computational thinking to real-world robotics systems"
+  ],
+
+  "successCriteria": [
+    "Students can explain the relationship between inputs, decisions, and outputs",
+    "Students can create a basic branching logic flowchart",
+    "Students can identify and debug flaws in an algorithm",
+    "Students can collaboratively explain their reasoning"
+  ],
+
+  "vocabulary": [
+    "sensor",
+    "input",
+    "output",
+    "algorithm",
+    "branching logic",
+    "debugging",
+    "autonomous system",
+    "computational thinking"
+  ],
+
+  "materials": [
+    "Chromebooks",
+    "Projector",
+    "Whiteboards",
+    "Flowchart templates",
+    "Launchpad display screen",
+    "Robot demo video"
+  ],
+
+  "differentiation": {
+    "supports": [
+      "Sentence stems for discussion",
+      "Guided flowchart templates",
+      "Teacher circulation prompts",
+      "Visual timers and phase displays",
+      "Think-pair-share before whole-group discussion",
+      "Chunked instructions and checkpoints"
+    ],
+
+    "extensions": [
+      "Add multiple sensors to robot logic",
+      "Create nested branching decisions",
+      "Design fail-safe robot behaviors",
+      "Optimize algorithms for efficiency",
+      "Compare multiple valid robot solutions"
+    ]
+  },
+
+  "teacherMoves": {
+    "circulateFocus": [
+      "Ask students to explain reasoning clearly",
+      "Encourage quieter students to contribute",
+      "Push groups to consider edge cases",
+      "Praise productive debugging attempts",
+      "Check for participation from all group members"
+    ],
+
+    "coldCallMode": "team_random",
+    "helpQueueEnabled": true,
+    "preferredPacingStyle": "fast_transitions"
+  },
+
+  "pointRewards": [
+    {
+      "id": "creative_solution",
+      "label": "Creative Solution",
+      "points": 2
+    },
+    {
+      "id": "great_debugging",
+      "label": "Great Debugging",
+      "points": 2
+    },
+    {
+      "id": "strong_collaboration",
+      "label": "Strong Collaboration",
+      "points": 2
+    },
+    {
+      "id": "excellent_reasoning",
+      "label": "Excellent Reasoning",
+      "points": 1
+    }
+  ],
+
+  "phases": [
+    {
+      "id": "hook_01",
+      "type": "warmup",
+      "title": "How Do Robots Know What To Do?",
+      "durationSeconds": 600,
+
+      "prompt": "Watch the robot navigation demo. How do you think the robot decides when to stop, turn, or move forward?",
+
+      "instructions": [
+        "Discuss ideas with your team",
+        "Submit one prediction as a group",
+        "Be ready to explain your reasoning"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "team",
+        "confidenceSelector": true
+      },
+
+      "keyActions": [
+        "Listen carefully to the robot's behavior",
+        "Discuss what sensory information could guide decisions",
+        "Explain your team's hypothesis clearly"
+      ]
+    },
+
+    {
+      "id": "instruction_01",
+      "type": "instruction",
+      "title": "Sensors, Inputs, and Branching Logic",
+      "durationSeconds": 900,
+
+      "keyIdeas": [
+        "Sensors provide robots with information about their environment",
+        "Input from sensors allows robots to make decisions",
+        "Branching logic (IF/THEN) helps robots respond to different situations",
+        "Autonomous systems combine sensing, decisions, and actions",
+        "Good algorithms handle multiple scenarios and edge cases"
+      ],
+
+      "display": {
+        "showObjectives": true,
+        "showTimer": true,
+        "showVocabulary": true
+      }
+    },
+
+    {
+      "id": "guided_practice_01",
+      "type": "challenge",
+      "title": "Design the Robot Logic",
+      "durationSeconds": 1500,
+
+      "prompt": "Your team has been hired to help a robot navigate an environment safely. Create a decision-making algorithm using sensor inputs and branching logic.",
+
+      "instructions": [
+        "Analyze your robot scenario",
+        "Create a flowchart or pseudocode solution",
+        "Identify possible edge cases",
+        "Prepare to explain your reasoning"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "team"
+      },
+
+      "keyActions": [
+        "Collaborate and listen to your teammates' ideas",
+        "Break down the problem into clear decision points",
+        "Test your logic against different scenarios",
+        "Document your reasoning for each branch",
+        "Consider what happens if sensors give unexpected data"
+      ]
+    },
+
+    {
+      "id": "debugging_01",
+      "type": "challenge",
+      "title": "Debug the Broken Robot",
+      "durationSeconds": 1200,
+
+      "prompt": "Your robot algorithm contains bugs. Identify what is failing and revise the logic so the robot behaves correctly.",
+
+      "instructions": [
+        "Test the algorithm mentally",
+        "Identify failures or contradictions",
+        "Revise the branching logic",
+        "Explain what caused the problem"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "team"
+      },
+
+      "keyActions": [
+        "Trace through the algorithm step-by-step",
+        "Identify where the logic breaks down",
+        "Find the root cause of the error",
+        "Propose a fix and test it mentally",
+        "Learn from the mistake to strengthen your understanding"
+      ]
+    },
+
+    {
+      "id": "discussion_01",
+      "type": "discussion",
+      "title": "Class Debrief and Solution Sharing",
+      "durationSeconds": 720,
+
+      "discussionPrompts": [
+        "What types of mistakes appeared most often?",
+        "Why is debugging important in robotics?",
+        "Can multiple valid solutions exist?",
+        "How do engineers improve reliability in autonomous systems?"
+      ],
+
+      "keyIdeas": [
+        "Different valid approaches can solve the same problem",
+        "Debugging is a core engineering skill, not just fixing errors",
+        "Edge cases and error conditions must be planned for",
+        "Collaboration strengthens algorithmic thinking",
+        "Real-world systems require robust, reliable decision-making"
+      ],
+
+      "display": {
+        "showLeaderboard": false,
+        "showTeamMap": true
+      }
+    },
+
+    {
+      "id": "reflection_01",
+      "type": "reflection",
+      "title": "Exit Reflection",
+      "durationSeconds": 480,
+
+      "reflectionQuestions": [
+        "What role do sensors play in robotics?",
+        "How does branching logic help robots make decisions?",
+        "What debugging strategy helped your team most today?",
+        "What improvement would you make to your algorithm?"
+      ],
+
+      "submission": {
+        "enabled": true,
+        "mode": "individual"
+      },
+
+      "keyActions": [
+        "Reflect honestly on what you learned today",
+        "Think about how sensors and logic connect to real robotics",
+        "Consider what debugging strategy worked best for your team",
+        "Identify one thing you would improve in your algorithm",
+        "Recognize your growth in computational thinking"
+      ]
+    }
+  ]
+}

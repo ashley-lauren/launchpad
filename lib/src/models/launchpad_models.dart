@@ -155,6 +155,8 @@ class LessonPhase {
     required this.display,
     required this.discussionPrompts,
     required this.reflectionQuestions,
+    required this.keyIdeas,
+    required this.keyActions,
     required this.rawJson,
   });
 
@@ -169,6 +171,8 @@ class LessonPhase {
   final Map<String, dynamic> display;
   final List<String> discussionPrompts;
   final List<String> reflectionQuestions;
+  final List<String> keyIdeas;
+  final List<String> keyActions;
   final Map<String, dynamic> rawJson;
 
   factory LessonPhase.fromJson(Map<String, dynamic> json) {
@@ -186,6 +190,8 @@ class LessonPhase {
       display: _asMap(json['display']),
       discussionPrompts: _asStringList(json['discussionPrompts']),
       reflectionQuestions: _asStringList(json['reflectionQuestions']),
+      keyIdeas: _asStringList(json['keyIdeas']),
+      keyActions: _asStringList(json['keyActions']),
       rawJson: Map<String, dynamic>.from(json),
     );
   }
