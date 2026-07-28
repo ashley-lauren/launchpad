@@ -93,7 +93,8 @@ class LaunchpadController extends ChangeNotifier {
     }
     final lesson = Lesson.fromJson(decoded);
     if (lesson.phases.isEmpty) {
-      throw const FormatException('Lesson JSON must include at least one phase.');
+      throw const FormatException(
+          'Lesson JSON must include at least one phase.');
     }
     _ticker?.cancel();
     await localRepository.saveLessonState(
@@ -151,6 +152,7 @@ class LaunchpadController extends ChangeNotifier {
     required String teamId,
     required String answer,
     required String confidence,
+    List<String>? contributors,
   }) async {
     final id = _uuid.v4();
     await localRepository.saveSubmission(
@@ -160,6 +162,7 @@ class LaunchpadController extends ChangeNotifier {
         teamId: teamId,
         answer: answer,
         confidence: confidence,
+        contributors: contributors ?? const [],
         clientGeneratedId: id,
         submittedAt: DateTime.now().toUtc(),
       ),

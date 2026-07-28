@@ -46,7 +46,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
 
     if (submission == null || !submission.enabled) {
       return const _PhaseSubmissionPlaceholder(
-        message: 'No team submission needed for this phase.',
+        message: 'No submission needed for this phase.',
       );
     }
     if (submission.mode == 'individual') {
@@ -79,7 +79,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Submit Answer',
+                            'Submit Response',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
@@ -105,7 +105,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                       (team) => DropdownMenuItem(
                                         value: team.id,
                                         child: Text(
-                                          team.name,
+                                          'Table ${team.tableNumber}',
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -114,7 +114,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                 onChanged: (value) =>
                                     setState(() => _teamId = value),
                                 decoration: InputDecoration(
-                                  labelText: 'Team',
+                                  labelText: 'Table / Group',
                                   filled: true,
                                   fillColor: accent.withValues(alpha: 0.08),
                                   enabledBorder: OutlineInputBorder(
@@ -138,9 +138,9 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                             minLines: 5,
                             maxLines: 8,
                             decoration: const InputDecoration(
-                              labelText: 'Warm-up answer',
+                              labelText: 'Response',
                               hintText:
-                                  'Explain the strategy your team would try first...',
+                                  'Share your thinking, strategy, or reflection...',
                             ),
                           ),
                           if (submission.confidenceSelector) ...[
@@ -168,8 +168,7 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                   }
                                   return const Color(0xFF8B949E);
                                 }),
-                                side:
-                                    WidgetStateProperty.resolveWith((states) {
+                                side: WidgetStateProperty.resolveWith((states) {
                                   if (states.contains(WidgetState.selected)) {
                                     return BorderSide(
                                       color: const Color(0xFF79C0FF)
@@ -222,16 +221,19 @@ class _TeamSubmissionScreenState extends State<TeamSubmissionScreen> {
                                       await widget.controller.submitAnswer(
                                         teamId: selectedTeam.id,
                                         answer: _answerController.text.trim(),
-                                        confidence: submission
-                                                .confidenceSelector
-                                            ? _confidence
-                                            : 'Not collected',
+                                        confidence:
+                                            submission.confidenceSelector
+                                                ? _confidence
+                                                : 'Not collected',
+                                        contributors: [
+                                          'Table ${selectedTeam.tableNumber}'
+                                        ],
                                       );
                                       if (mounted) {
                                         setState(() => _submitted = true);
                                       }
                                     },
-                              child: const Text('Submit team answer'),
+                              child: const Text('Submit response'),
                             ),
                           ),
                         ],
@@ -294,7 +296,7 @@ class _NoTeamsMessage extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(14),
         child: Text(
-          'No teams are available yet. Add teams in the Teacher tab before submitting an answer.',
+          'No table assignments are available yet. Set up tables in the Teacher tab before submitting.',
           style: TextStyle(color: Color(0xFF8B949E)),
         ),
       ),
@@ -324,7 +326,7 @@ class _Confirmation extends StatelessWidget {
         const SizedBox(height: 22),
         TextButton(
           onPressed: onAnother,
-          child: const Text('Submit another answer'),
+          child: const Text('Submit another response'),
         ),
       ],
     );

@@ -381,6 +381,7 @@ class Submission {
     required this.clientGeneratedId,
     required this.submittedAt,
     this.syncedAt,
+    this.contributors = const [],
   });
 
   final String id;
@@ -391,8 +392,10 @@ class Submission {
   final String clientGeneratedId;
   final DateTime submittedAt;
   final DateTime? syncedAt;
+  final List<String> contributors;
 
-  Submission copyWith({DateTime? syncedAt}) => Submission(
+  Submission copyWith({DateTime? syncedAt, List<String>? contributors}) =>
+      Submission(
         id: id,
         warmupId: warmupId,
         teamId: teamId,
@@ -401,6 +404,7 @@ class Submission {
         clientGeneratedId: clientGeneratedId,
         submittedAt: submittedAt,
         syncedAt: syncedAt ?? this.syncedAt,
+        contributors: contributors ?? this.contributors,
       );
 
   factory Submission.fromJson(Map<String, dynamic> json) => Submission(
@@ -414,6 +418,13 @@ class Submission {
         syncedAt: json['synced_at'] == null
             ? null
             : DateTime.parse(json['synced_at'] as String),
+        contributors: (json['contributors'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['contributor_ids'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -425,6 +436,8 @@ class Submission {
         'client_generated_id': clientGeneratedId,
         'submitted_at': submittedAt.toIso8601String(),
         'synced_at': syncedAt?.toIso8601String(),
+        'contributors': contributors,
+        'contributor_ids': contributors,
       };
 }
 

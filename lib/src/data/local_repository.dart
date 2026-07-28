@@ -12,7 +12,8 @@ class LocalRepository implements LaunchpadRepository {
   final SharedPreferences _prefs;
 
   static const _stateKey = 'launchpad.local.state.v1';
-  static const sampleLessonAssetPath = 'lib/src/data/dsisd-interview-lesson-plan.json';
+  static const sampleLessonAssetPath =
+      'lib/src/data/dsisd-interview-lesson-plan.json';
 
   Future<void> ensureSeeded() async {
     if (_prefs.containsKey(_stateKey)) return;
@@ -65,12 +66,12 @@ class LocalRepository implements LaunchpadRepository {
     ];
 
     final teams = [
-      'Debug Dragons',
-      'Quantum Penguins',
-      'Ctrl+Z Crew',
-      'Circuit Goblins',
-      'Syntax Sorcerers',
-      'Prototype Pirates',
+      'Table 1',
+      'Table 2',
+      'Table 3',
+      'Table 4',
+      'Table 5',
+      'Table 6',
     ].asMap().entries.map((entry) {
       return Team(
         id: '00000000-0000-4000-8000-00000000020${entry.key}',
@@ -169,13 +170,18 @@ class LocalRepository implements LaunchpadRepository {
             .toList()
         : [launchClass];
 
+    final teams = (json['teams'] as List)
+        .map((item) => Team.fromJson(item as Map<String, dynamic>))
+        .toList();
+    final normalizedTeams = teams
+        .map((team) => team.copyWith(name: 'Table ${team.tableNumber}'))
+        .toList();
+
     var state = LaunchpadState(
       launchClass: launchClass,
       classes: classes,
       warmup: Warmup.fromJson(json['warmup'] as Map<String, dynamic>),
-      teams: (json['teams'] as List)
-          .map((item) => Team.fromJson(item as Map<String, dynamic>))
-          .toList(),
+      teams: normalizedTeams,
       submissions: (json['submissions'] as List)
           .map((item) => Submission.fromJson(item as Map<String, dynamic>))
           .toList(),
@@ -191,9 +197,9 @@ class LocalRepository implements LaunchpadRepository {
       final lesson = await loadSampleLesson();
       if (lesson != null) {
         state = state.copyWith(activeLesson: lesson, currentPhaseIndex: 0);
-        await _writeState(state);
       }
     }
+    await _writeState(state);
     return state;
   }
 

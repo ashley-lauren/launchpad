@@ -78,8 +78,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             children: [
               _Submissions(submissions: state.submissions, teams: state.teams),
               const SizedBox(height: 18),
-              _PointsPanel(controller: widget.controller),
-              const SizedBox(height: 18),
               _TeamsPanel(controller: widget.controller),
               const SizedBox(height: 18),
               _DemoPanel(controller: widget.controller),
@@ -271,7 +269,8 @@ class _LessonImportPanel extends StatelessWidget {
   }
 
   Future<void> _pickAndImport(BuildContext context) async {
-    final input = html.FileUploadInputElement()..accept = '.json,application/json';
+    final input = html.FileUploadInputElement()
+      ..accept = '.json,application/json';
     input.click();
     await input.onChange.first;
     final file = input.files?.isEmpty == false ? input.files!.first : null;
@@ -400,7 +399,9 @@ class _Submissions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final teamById = {for (final team in teams) team.id: team.name};
+    final teamById = {
+      for (final team in teams) team.id: 'Table ${team.tableNumber}'
+    };
     return Card(
       child: SizedBox(
         width: double.infinity,
@@ -460,85 +461,6 @@ class _Submissions extends StatelessWidget {
   }
 }
 
-class _PointsPanel extends StatelessWidget {
-  const _PointsPanel({required this.controller});
-
-  final LaunchpadController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    const reasons = [
-      'Great reasoning',
-      'Creative idea',
-      'Strong collaboration',
-      'Helpful mistake',
-    ];
-    final teams = controller.state.teams;
-    return Card(
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Points Quick-Add',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 12),
-              for (final team in teams)
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: teamAccentColor(team),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          team.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Text(
-                        '${team.points} pts',
-                        style: TextStyle(color: teamAccentColor(team)),
-                      ),
-                    ],
-                  ),
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final reason in reasons)
-                          OutlinedButton(
-                            onPressed: () => controller.awardPoints(
-                              teamId: team.id,
-                              reason: reason,
-                            ),
-                            child: Text('+1 $reason'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _TeamsPanel extends StatefulWidget {
   const _TeamsPanel({required this.controller});
 
@@ -590,7 +512,7 @@ class _TeamsPanelState extends State<_TeamsPanel> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Teams',
+                'Table Assignments',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 12),
@@ -614,29 +536,13 @@ class _TeamsPanelState extends State<_TeamsPanel> {
                           Expanded(
                             child: TextField(
                               controller: _nameControllers[team.id],
+                              readOnly: true,
                               decoration: InputDecoration(
-                                hintText: 'Team name',
+                                hintText: 'Table number',
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 8,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.check),
-                                  onPressed: () {
-                                    widget.controller.updateTeam(
-                                      teamId: team.id,
-                                      name: _nameControllers[team.id]!
-                                          .text
-                                          .trim(),
-                                      members: _membersControllers[team.id]!
-                                          .text
-                                          .split('\n')
-                                          .map((m) => m.trim())
-                                          .where((m) => m.isNotEmpty)
-                                          .toList(),
-                                    );
-                                  },
                                 ),
                               ),
                             ),
@@ -653,6 +559,25 @@ class _TeamsPanelState extends State<_TeamsPanel> {
                               'Student names (one per line)\nE.g.: Alex\nJordan',
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.all(12),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            widget.controller.updateTeam(
+                              teamId: team.id,
+                              name: 'Table ${team.tableNumber}',
+                              members: _membersControllers[team.id]!
+                                  .text
+                                  .split('\n')
+                                  .map((m) => m.trim())
+                                  .where((m) => m.isNotEmpty)
+                                  .toList(),
+                            );
+                          },
+                          child: const Text('Save members'),
                         ),
                       ),
                     ],

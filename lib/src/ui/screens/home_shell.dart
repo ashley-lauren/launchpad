@@ -83,7 +83,7 @@ class _HomeShellState extends State<HomeShell> {
           bottom: TabBar(
             tabs: const [
               Tab(text: 'Display'),
-              Tab(text: 'Team Submit'),
+              Tab(text: 'Submit'),
               Tab(text: 'Teacher'),
             ],
             onTap: (index) {

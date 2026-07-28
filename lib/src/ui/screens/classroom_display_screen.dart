@@ -35,14 +35,6 @@ class ClassroomDisplayScreen extends StatelessWidget {
             : currentPhase.title;
     final phaseDisplay = currentPhase?.display ?? const {};
     final displaySettings = lesson?.displaySettings;
-    final showTeamMap = phaseDisplay['showTeamMap'] as bool? ??
-        displaySettings?.showTeamMap ??
-        true;
-    final showLeaderboard = phaseDisplay['showLeaderboard'] as bool? ??
-        displaySettings?.showLeaderboard ??
-        true;
-    final sortedTeams = [...state.teams]
-      ..sort((a, b) => b.points.compareTo(a.points));
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
@@ -65,11 +57,7 @@ class ClassroomDisplayScreen extends StatelessWidget {
                   prompt: prompt,
                   agenda: agenda,
                   currentAgendaIndex: currentAgendaIndex,
-                  wide: wide,
-                  showTeamMap: showTeamMap,
-                  showLeaderboard: showLeaderboard,
                   teams: state.teams,
-                  sortedTeams: sortedTeams,
                 ),
               _ => _GenericPhaseDisplay(
                   controller: controller,
@@ -92,11 +80,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
     required this.prompt,
     required this.agenda,
     required this.currentAgendaIndex,
-    required this.wide,
-    required this.showTeamMap,
-    required this.showLeaderboard,
     required this.teams,
-    required this.sortedTeams,
   });
 
   final LaunchpadController controller;
@@ -104,11 +88,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
   final String prompt;
   final List<AgendaItem> agenda;
   final int? currentAgendaIndex;
-  final bool wide;
-  final bool showTeamMap;
-  final bool showLeaderboard;
   final List<Team> teams;
-  final List<Team> sortedTeams;
 
   @override
   Widget build(BuildContext context) {
@@ -131,30 +111,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
           currentAgendaIndex: currentAgendaIndex,
         ),
         const SizedBox(height: 18),
-        if (!showTeamMap && !showLeaderboard)
-          const SizedBox.shrink()
-        else if (wide)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showTeamMap)
-                Expanded(
-                  flex: 5,
-                  child: _TeamGrid(teams: teams),
-                ),
-              if (showTeamMap && showLeaderboard) const SizedBox(width: 18),
-              if (showLeaderboard)
-                Expanded(
-                  flex: 4,
-                  child: _Standings(teams: sortedTeams),
-                ),
-            ],
-          )
-        else ...[
-          if (showTeamMap) _TeamGrid(teams: teams),
-          if (showTeamMap && showLeaderboard) const SizedBox(height: 18),
-          if (showLeaderboard) _Standings(teams: sortedTeams),
-        ],
+        _TableAssignments(teams: teams),
       ],
     );
   }
@@ -218,8 +175,7 @@ class _HeroPanel extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        for (final action in keyActions)
-                          _Expectation(action),
+                        for (final action in keyActions) _Expectation(action),
                       ],
                     ),
                     const SizedBox(height: 48),
@@ -256,6 +212,100 @@ class _HeroPanel extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             const RobotMascot(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TableAssignments extends StatelessWidget {
+  const _TableAssignments({required this.teams});
+
+  final List<Team> teams;
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedTables = [...teams]
+      ..sort((a, b) => a.tableNumber.compareTo(b.tableNumber));
+
+    if (sortedTables.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Table Assignments',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            GridView.count(
+              crossAxisCount: MediaQuery.sizeOf(context).width > 700 ? 3 : 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 1.25,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              children: sortedTables.map((team) {
+                final accent = teamAccentColor(team).withValues(alpha: 0.35);
+                final visibleMembers = team.members.take(4).toList();
+                return SizedBox(
+                  height: 150,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: accent),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Table ${team.tableNumber}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          if (visibleMembers.isEmpty)
+                            const Text(
+                              'Students will be added here.',
+                              style: TextStyle(
+                                color: Color(0xFF8B949E),
+                                fontSize: 11,
+                              ),
+                            )
+                          else
+                            ...visibleMembers.map(
+                              (member) => Padding(
+                                padding: const EdgeInsets.only(bottom: 3),
+                                child: Text(
+                                  member,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFFE6EDF3),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ],
         ),
       ),
@@ -370,7 +420,14 @@ class _GenericPhaseDisplay extends StatelessWidget {
     final currentPhase = phase;
     final prompt = currentPhase?.prompt ?? '';
     final instructions = currentPhase?.instructions ?? const <String>[];
-    final keyActions = currentPhase?.keyActions ?? const <String>[];
+    final phaseType = currentPhase?.type.toLowerCase() ?? '';
+    final isConceptualPhase = phaseType == 'discussion';
+
+    // Show Key Ideas for conceptual phases (discussion), Key Actions for activity phases
+    final guidanceItems = isConceptualPhase
+        ? (currentPhase?.keyIdeas ?? const <String>[])
+        : (currentPhase?.keyActions ?? const <String>[]);
+    final guidanceLabel = isConceptualPhase ? 'Key Ideas' : 'Key Actions';
 
     return Card(
       child: Padding(
@@ -414,10 +471,10 @@ class _GenericPhaseDisplay extends StatelessWidget {
                       ],
                     ),
                   ],
-                  if (keyActions.isNotEmpty) ...[
+                  if (guidanceItems.isNotEmpty) ...[
                     const SizedBox(height: 28),
                     Text(
-                      'Key Actions',
+                      guidanceLabel,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.secondary,
                         fontWeight: FontWeight.w700,
@@ -427,11 +484,11 @@ class _GenericPhaseDisplay extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final action in keyActions)
+                        for (final item in guidanceItems)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Text(
-                              '• $action',
+                              '• $item',
                               style: const TextStyle(
                                 color: Color(0xFF8B949E),
                               ),
@@ -622,137 +679,6 @@ class _Expectation extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           softWrap: false,
-        ),
-      ),
-    );
-  }
-}
-
-class _TeamGrid extends StatelessWidget {
-  const _TeamGrid({required this.teams});
-
-  final List<Team> teams;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 400),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Team Map',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 14),
-              GridView.count(
-                crossAxisCount: MediaQuery.sizeOf(context).width > 700 ? 3 : 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.55,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: teams.map((team) {
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: teamAccentColor(team).withValues(alpha: 0.45),
-                        width: 1.5,
-                      ),
-                    ),
-                    color: teamAccentColor(team).withValues(alpha: 0.04),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            team.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            team.members
-                                .asMap()
-                                .entries
-                                .map((e) => e.value)
-                                .join('\n'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF8B949E),
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Standings extends StatelessWidget {
-  const _Standings({required this.teams});
-
-  final List<Team> teams;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 400),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Leaderboard',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 12),
-              for (final team in teams)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: teamAccentColor(team),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          team.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Text(
-                        '${team.points}',
-                        style: TextStyle(color: teamAccentColor(team)),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
         ),
       ),
     );
