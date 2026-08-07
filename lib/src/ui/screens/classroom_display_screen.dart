@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 import '../../models/launchpad_models.dart';
 import '../../services/launchpad_controller.dart';
 import '../theme.dart';
+import '../widgets/launchpad_phase_flow.dart';
 import '../widgets/robot_mascot.dart';
 
 class ClassroomDisplayScreen extends StatelessWidget {
-  const ClassroomDisplayScreen({super.key, required this.controller});
+  const ClassroomDisplayScreen({
+    super.key,
+    required this.controller,
+    this.showTeacherControls = false,
+  });
 
   final LaunchpadController controller;
+  final bool showTeacherControls;
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +39,13 @@ class ClassroomDisplayScreen extends StatelessWidget {
         : currentPhase.prompt.isNotEmpty
             ? currentPhase.prompt
             : currentPhase.title;
-    final phaseDisplay = currentPhase?.display ?? const {};
-    final displaySettings = lesson?.displaySettings;
-
+    final displayPrompt = controller.currentActivity.isNotEmpty
+        ? controller.currentActivity
+        : prompt;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth > 900;
           final phaseType = currentPhase?.type.toLowerCase() ?? 'warmup';
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -50,20 +55,23 @@ class ClassroomDisplayScreen extends StatelessWidget {
                   phase: currentPhase,
                   agenda: agenda,
                   currentAgendaIndex: currentAgendaIndex,
+                  showTeacherControls: showTeacherControls,
                 ),
               'warmup' => _WarmupPhaseDisplay(
                   controller: controller,
                   phase: currentPhase,
-                  prompt: prompt,
+                  prompt: displayPrompt,
                   agenda: agenda,
                   currentAgendaIndex: currentAgendaIndex,
                   teams: state.teams,
+                  showTeacherControls: showTeacherControls,
                 ),
               _ => _GenericPhaseDisplay(
                   controller: controller,
                   phase: currentPhase,
                   agenda: agenda,
                   currentAgendaIndex: currentAgendaIndex,
+                  showTeacherControls: showTeacherControls,
                 ),
             },
           );
@@ -81,6 +89,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
     required this.agenda,
     required this.currentAgendaIndex,
     required this.teams,
+    required this.showTeacherControls,
   });
 
   final LaunchpadController controller;
@@ -89,6 +98,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
   final List<AgendaItem> agenda;
   final int? currentAgendaIndex;
   final List<Team> teams;
+  final bool showTeacherControls;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +119,7 @@ class _WarmupPhaseDisplay extends StatelessWidget {
           agenda: agenda,
           keyActions: keyActions,
           currentAgendaIndex: currentAgendaIndex,
+          showTeacherControls: showTeacherControls,
         ),
         const SizedBox(height: 18),
         _TableAssignments(teams: teams),
@@ -124,6 +135,7 @@ class _HeroPanel extends StatelessWidget {
     required this.agenda,
     required this.keyActions,
     required this.currentAgendaIndex,
+    required this.showTeacherControls,
   });
 
   final LaunchpadController controller;
@@ -131,6 +143,7 @@ class _HeroPanel extends StatelessWidget {
   final List<AgendaItem> agenda;
   final List<String> keyActions;
   final int? currentAgendaIndex;
+  final bool showTeacherControls;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +165,17 @@ class _HeroPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (showTeacherControls)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Runtime controls are available in Teacher mode',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   Text(
                     '$minutes:$seconds',
                     style: const TextStyle(
@@ -187,25 +211,9 @@ class _HeroPanel extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      for (var i = 0; i < agenda.length; i++) ...[
-                        _AgendaFlowItem(
-                          label: agenda[i].title,
-                          durationLabel: '~ ${agenda[i].durationMinutes} min',
-                          selected: i == currentAgendaIndex,
-                        ),
-                        if (i < agenda.length - 1)
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Color(0xFF7EE787),
-                            size: 24,
-                          ),
-                      ],
-                    ],
+                  LaunchpadPhaseFlow(
+                    items: agenda,
+                    selectedIndex: currentAgendaIndex,
                   ),
                 ],
               ),
@@ -319,12 +327,14 @@ class _InstructionPhaseDisplay extends StatelessWidget {
     required this.phase,
     required this.agenda,
     required this.currentAgendaIndex,
+    required this.showTeacherControls,
   });
 
   final LaunchpadController controller;
   final LessonPhase? phase;
   final List<AgendaItem> agenda;
   final int? currentAgendaIndex;
+  final bool showTeacherControls;
 
   @override
   Widget build(BuildContext context) {
@@ -408,12 +418,14 @@ class _GenericPhaseDisplay extends StatelessWidget {
     required this.phase,
     required this.agenda,
     required this.currentAgendaIndex,
+    required this.showTeacherControls,
   });
 
   final LaunchpadController controller;
   final LessonPhase? phase;
   final List<AgendaItem> agenda;
   final int? currentAgendaIndex;
+  final bool showTeacherControls;
 
   @override
   Widget build(BuildContext context) {
@@ -563,95 +575,11 @@ class _AgendaRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            for (var i = 0; i < agenda.length; i++) ...[
-              _AgendaFlowItem(
-                label: agenda[i].title,
-                durationLabel: '~ ${agenda[i].durationMinutes} min',
-                selected: i == currentAgendaIndex,
-              ),
-              if (i < agenda.length - 1)
-                const Icon(
-                  Icons.chevron_right,
-                  color: Color(0xFF7EE787),
-                  size: 24,
-                ),
-            ],
-          ],
+        LaunchpadPhaseFlow(
+          items: agenda,
+          selectedIndex: currentAgendaIndex,
         ),
       ],
-    );
-  }
-}
-
-class _AgendaFlowItem extends StatelessWidget {
-  const _AgendaFlowItem({
-    required this.label,
-    required this.durationLabel,
-    this.selected = false,
-  });
-
-  final String label;
-  final String durationLabel;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: selected
-            ? const Color(0xFF7EE787).withValues(alpha: 0.12)
-            : const Color(0xFF7EE787).withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFF7EE787).withValues(
-            alpha: selected ? 0.9 : 0.45,
-          ),
-          width: selected ? 1.5 : 1,
-        ),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF7EE787).withValues(alpha: 0.16),
-                  blurRadius: 18,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                softWrap: false,
-                style: const TextStyle(
-                  color: Color(0xFFE6EDF3),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              durationLabel,
-              style: const TextStyle(
-                color: Color(0xFF7EE787),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

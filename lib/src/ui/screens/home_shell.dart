@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/launchpad_role.dart';
 import '../../services/launchpad_controller.dart';
 import '../widgets/status_pill.dart';
 import 'classroom_display_screen.dart';
@@ -7,17 +8,16 @@ import 'teacher_dashboard_screen.dart';
 import 'team_submission_screen.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.controller});
+  const HomeShell({super.key, required this.controller, required this.role});
 
   final LaunchpadController controller;
+  final LaunchpadRole role;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _currentTabIndex = 0;
-
   static const _monthNames = [
     'Jan',
     'Feb',
@@ -50,128 +50,192 @@ class _HomeShellState extends State<HomeShell> {
             if (lessonInfo.date.isNotEmpty) lessonInfo.date,
           ].join(' · ');
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF0D1117),
-          title: Row(
-            children: [
-              const Text(
-                'Launchpad',
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "// $titleLabel",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontSize: 13,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+    final roleLabel = switch (widget.role) {
+      LaunchpadRole.student => 'Student',
+      LaunchpadRole.teacher => 'Teacher',
+      LaunchpadRole.admin => 'Admin',
+    };
+
+    final statusLabel = switch (widget.role) {
+      LaunchpadRole.student => widget.controller.liveStatusLabel,
+      LaunchpadRole.teacher => widget.controller.isLive ? 'Live' : 'Not Live',
+      LaunchpadRole.admin => 'Connected',
+    };
+
+    final statusColor = switch (widget.role) {
+      LaunchpadRole.student => widget.controller.liveStatusColor,
+      LaunchpadRole.teacher => widget.controller.isLive
+          ? const Color(0xFF7EE787)
+          : const Color(0xFF8B949E),
+      LaunchpadRole.admin => const Color(0xFF79C0FF),
+    };
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D1117),
+        title: Row(
+          children: [
+            Text(
+              'Launchpad · $roleLabel',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "// $titleLabel",
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontSize: 13,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: StatusPill(status: widget.controller.syncStatus),
             ),
           ],
-          bottom: TabBar(
-            tabs: const [
-              Tab(text: 'Display'),
-              Tab(text: 'Submit'),
-              Tab(text: 'Teacher'),
-            ],
-            onTap: (index) {
-              setState(() {
-                _currentTabIndex = index;
-              });
-            },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: StatusPill(
+              label: statusLabel,
+              color: statusColor,
+              onTap: widget.role == LaunchpadRole.student &&
+                      widget.controller.canToggleFollow
+                  ? widget.controller.toggleFollowClass
+                  : null,
+            ),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            ClassroomDisplayScreen(controller: widget.controller),
-            TeamSubmissionScreen(controller: widget.controller),
-            TeacherDashboardScreen(controller: widget.controller),
-          ],
-        ),
-        floatingActionButton: (_currentTabIndex == 0 || _currentTabIndex == 2)
-            ? Stack(
-                children: [
-                  Positioned(
-                    bottom: 0,
-                    right: 64,
-                    child: FloatingActionButton.small(
-                      onPressed:
-                          (_currentTabIndex == 0 || _currentTabIndex == 2)
-                              ? (widget.controller.timerRunning
-                                  ? widget.controller.pauseTimer
-                                  : widget.controller.startTimer)
-                              : null,
-                      backgroundColor: Theme.of(context).colorScheme.tertiary,
-                      foregroundColor: Colors.black87,
-                      child: Icon(
-                        widget.controller.timerRunning
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 64,
-                    right: 0,
-                    child: FloatingActionButton.small(
-                      onPressed:
-                          (_currentTabIndex == 0 || _currentTabIndex == 2)
-                              ? (widget.controller.state.currentPhaseIndex <= 0
-                                  ? null
-                                  : widget.controller.previousPhase)
-                              : null,
-                      backgroundColor:
-                          widget.controller.state.currentPhaseIndex <= 0
-                              ? Colors.grey[600]
-                              : Theme.of(context).colorScheme.secondary,
-                      foregroundColor: Colors.black87,
-                      child: const Icon(Icons.arrow_upward),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: FloatingActionButton(
-                      onPressed: (widget.controller.state.activeLesson?.phases
-                                      .isEmpty ??
-                                  true) ||
-                              widget.controller.state.currentPhaseIndex >=
-                                  (widget.controller.state.activeLesson?.phases
-                                              .length ??
-                                          0) -
-                                      1
-                          ? null
-                          : widget.controller.nextPhase,
-                      backgroundColor: (widget.controller.state.activeLesson
-                                      ?.phases.isEmpty ??
-                                  true) ||
-                              widget.controller.state.currentPhaseIndex >=
-                                  (widget.controller.state.activeLesson?.phases
-                                              .length ??
-                                          0) -
-                                      1
-                          ? Colors.grey[600]
-                          : Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.black87,
-                      child: const Icon(Icons.arrow_downward),
-                    ),
-                  ),
+        ],
+        bottom: widget.role == LaunchpadRole.student
+            ? const TabBar(
+                tabs: [
+                  Tab(text: 'Class'),
+                  Tab(text: 'Submit'),
                 ],
               )
             : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ),
+      body: _buildBody(),
+      floatingActionButton: widget.role == LaunchpadRole.teacher
+          ? Stack(
+              children: [
+                Positioned(
+                  bottom: 0,
+                  right: 64,
+                  child: FloatingActionButton.small(
+                    onPressed: () {
+                      if (widget.controller.timerRunning) {
+                        widget.controller.pauseTimer();
+                      } else if (widget.controller.timerPaused) {
+                        widget.controller.resumeTimer();
+                      } else {
+                        widget.controller.startTimer();
+                      }
+                    },
+                    backgroundColor: Theme.of(context).colorScheme.tertiary,
+                    foregroundColor: Colors.black87,
+                    child: Icon(
+                      widget.controller.timerRunning
+                          ? Icons.pause
+                          : widget.controller.timerPaused
+                              ? Icons.play_arrow
+                              : Icons.play_arrow,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 64,
+                  right: 0,
+                  child: FloatingActionButton.small(
+                    onPressed: widget.controller.state.currentPhaseIndex <= 0
+                        ? null
+                        : widget.controller.previousPhase,
+                    backgroundColor:
+                        widget.controller.state.currentPhaseIndex <= 0
+                            ? Colors.grey[600]
+                            : Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Colors.black87,
+                    child: const Icon(Icons.arrow_upward),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: FloatingActionButton(
+                    onPressed:
+                        (widget.controller.state.activeLesson?.phases.isEmpty ??
+                                    true) ||
+                                widget.controller.state.currentPhaseIndex >=
+                                    (widget.controller.state.activeLesson
+                                                ?.phases.length ??
+                                            0) -
+                                        1
+                            ? null
+                            : widget.controller.nextPhase,
+                    backgroundColor:
+                        (widget.controller.state.activeLesson?.phases.isEmpty ??
+                                    true) ||
+                                widget.controller.state.currentPhaseIndex >=
+                                    (widget.controller.state.activeLesson
+                                                ?.phases.length ??
+                                            0) -
+                                        1
+                            ? Colors.grey[600]
+                            : Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.black87,
+                    child: const Icon(Icons.arrow_downward),
+                  ),
+                ),
+              ],
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildBody() {
+    switch (widget.role) {
+      case LaunchpadRole.student:
+        return _StudentBody(controller: widget.controller);
+      case LaunchpadRole.teacher:
+        return ClassroomDisplayScreen(
+          controller: widget.controller,
+          showTeacherControls: true,
+        );
+      case LaunchpadRole.admin:
+        return TeacherDashboardScreen(controller: widget.controller);
+    }
+  }
+}
+
+class _StudentBody extends StatelessWidget {
+  const _StudentBody({required this.controller});
+
+  final LaunchpadController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(text: 'Class'),
+              Tab(text: 'Submit'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                ClassroomDisplayScreen(
+                  controller: controller,
+                  showTeacherControls: false,
+                ),
+                TeamSubmissionScreen(controller: controller),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

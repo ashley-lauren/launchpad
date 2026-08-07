@@ -9,10 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_dotenv: ^6.0.1
   flutter_web_plugins:
     sdk: flutter
   shared_preferences: ^2.3.2
-  supabase_flutter: ^2.8.0
+  supabase_flutter: ^2.15.4
   uuid: ^4.5.1
 
 dev_dependencies:
@@ -24,3 +25,4 @@ flutter:
   uses-material-design: true
   assets:
     - lib/src/data/sample_lesson_import.json
+    - .env

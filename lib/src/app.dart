@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'services/launchpad_controller.dart';
-import 'ui/screens/home_shell.dart';
+import 'ui/screens/admin_shell.dart';
+import 'ui/screens/student_shell.dart';
+import 'ui/screens/teacher_shell.dart';
 import 'ui/theme.dart';
 
 class LaunchpadApp extends StatelessWidget {
@@ -18,7 +20,12 @@ class LaunchpadApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'Launchpad',
           theme: buildLaunchpadTheme(),
-          home: HomeShell(controller: controller),
+          routes: {
+            '/student': (context) => StudentShell(controller: controller),
+            '/teacher': (context) => TeacherShell(controller: controller),
+            '/admin': (context) => AdminShell(controller: controller),
+            '/': (context) => StudentShell(controller: controller),
+          },
         );
       },
     );

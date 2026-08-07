@@ -1,19 +1,22 @@
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 
-import 'dart:async';
-import 'dart:html' as html;
-
 import 'package:flutter/material.dart';
 
 import '../../models/launchpad_models.dart';
 import '../../services/launchpad_controller.dart';
 import '../theme.dart';
-import '../widgets/status_pill.dart';
+import '../widgets/lesson_json_editor.dart';
+import '../widgets/table_layout_builder.dart';
 
 class TeacherDashboardScreen extends StatefulWidget {
-  const TeacherDashboardScreen({super.key, required this.controller});
+  const TeacherDashboardScreen({
+    super.key,
+    required this.controller,
+    this.isAdmin = false,
+  });
 
   final LaunchpadController controller;
+  final bool isAdmin;
 
   @override
   State<TeacherDashboardScreen> createState() => _TeacherDashboardScreenState();
@@ -47,40 +50,74 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       padding: const EdgeInsets.all(24),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth > 980;
+          final wide = constraints.maxWidth >= 1120;
           final left = Column(
             children: [
-              _ClassSelector(
-                classes: state.classes,
-                selectedClass: state.launchClass,
-                onClassSelected: widget.controller.selectClass,
-              ),
-              const SizedBox(height: 18),
-              _WarmupEditor(
-                promptController: _promptController,
-                agendaController: _agendaController,
-                onSave: () => widget.controller.updateWarmup(
-                  prompt: _promptController.text.trim(),
-                  agenda: _agendaController.text.split('\n'),
+              if (!widget.isAdmin)
+                ...[
+                  _CurrentActivityPanel(controller: widget.controller),
+                  const SizedBox(height: 18),
+                ],
+              if (widget.isAdmin)
+                LessonJsonEditor(controller: widget.controller)
+              else ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Warmup Config',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _promptController,
+                          minLines: 3,
+                          maxLines: 5,
+                          decoration: const InputDecoration(labelText: 'Today\'s prompt'),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _agendaController,
+                          minLines: 4,
+                          maxLines: 6,
+                          decoration: const InputDecoration(
+                            labelText: 'Agenda, one item per line',
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton(
+                            onPressed: () => widget.controller.updateWarmup(
+                              prompt: _promptController.text.trim(),
+                              agenda: _agendaController.text.split('\n'),
+                            ),
+                            child: const Text('Save warm-up'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              _TimerControls(controller: widget.controller),
-              const SizedBox(height: 18),
-              _LessonImportPanel(controller: widget.controller),
-              const SizedBox(height: 18),
-              _LessonFlowPanel(controller: widget.controller),
-              const SizedBox(height: 18),
-              const _AmbientSoon(),
+                const SizedBox(height: 18),
+                _TimerControls(controller: widget.controller),
+              ],
             ],
           );
           final right = Column(
             children: [
-              _Submissions(submissions: state.submissions, teams: state.teams),
+              if (!widget.isAdmin) ...[
+                _Submissions(submissions: state.submissions, teams: state.teams),
+                const SizedBox(height: 18),
+              ],
+              if (widget.isAdmin)
+                TableLayoutBuilder(controller: widget.controller)
+              else
+                _TeamsPanel(controller: widget.controller),
               const SizedBox(height: 18),
-              _TeamsPanel(controller: widget.controller),
-              const SizedBox(height: 18),
-              _DemoPanel(controller: widget.controller),
             ],
           );
           if (!wide) {
@@ -89,7 +126,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: left),
+              Expanded(flex: 2, child: left),
               const SizedBox(width: 18),
               Expanded(child: right),
             ],
@@ -100,68 +137,40 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 }
 
-class _ClassSelector extends StatelessWidget {
-  const _ClassSelector({
-    required this.classes,
-    required this.selectedClass,
-    required this.onClassSelected,
-  });
+class _CurrentActivityPanel extends StatefulWidget {
+  const _CurrentActivityPanel({required this.controller});
 
-  final List<LaunchClass> classes;
-  final LaunchClass selectedClass;
-  final ValueChanged<String> onClassSelected;
+  final LaunchpadController controller;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Class Selectction',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: selectedClass.id,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              ),
-              items: classes
-                  .map(
-                    (item) => DropdownMenuItem(
-                      value: item.id,
-                      child: Text(item.name),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  onClassSelected(value);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<_CurrentActivityPanel> createState() => _CurrentActivityPanelState();
 }
 
-class _WarmupEditor extends StatelessWidget {
-  const _WarmupEditor({
-    required this.promptController,
-    required this.agendaController,
-    required this.onSave,
-  });
+class _CurrentActivityPanelState extends State<_CurrentActivityPanel> {
+  late final TextEditingController _activityController;
 
-  final TextEditingController promptController;
-  final TextEditingController agendaController;
-  final VoidCallback onSave;
+  @override
+  void initState() {
+    super.initState();
+    _activityController = TextEditingController(
+      text: widget.controller.currentActivity,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _CurrentActivityPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller.currentActivity !=
+        widget.controller.currentActivity) {
+      _activityController.text = widget.controller.currentActivity;
+    }
+  }
+
+  @override
+  void dispose() {
+    _activityController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,32 +181,56 @@ class _WarmupEditor extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Warmup Config',
+              'Current Activity',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: promptController,
-              minLines: 3,
-              maxLines: 5,
-              decoration: const InputDecoration(labelText: 'Today\'s prompt'),
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: agendaController,
-              minLines: 4,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Agenda, one item per line',
-              ),
+              controller: _activityController,
+              decoration: const InputDecoration(labelText: 'Activity'),
             ),
-            const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: onSave,
-                child: const Text('Save warm-up'),
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.controller.classroomStateStatusText,
+                    style: const TextStyle(color: Color(0xFF8B949E)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    await widget.controller.updateCurrentActivity(
+                      _activityController.text,
+                    );
+                  },
+                  child: const Text('Update Activity'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Live class controls',
+                    style: TextStyle(color: Color(0xFF8B949E)),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (widget.controller.isLive) {
+                      await widget.controller.endLiveClass();
+                    } else {
+                      await widget.controller.startLiveClass();
+                    }
+                  },
+                  child: Text(widget.controller.isLive
+                      ? 'End Live Class'
+                      : 'Start Live Class'),
+                ),
+              ],
             ),
           ],
         ),
@@ -230,161 +263,20 @@ class _TimerControls extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: controller.startTimer,
-              child: const Text('Start'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LessonImportPanel extends StatelessWidget {
-  const _LessonImportPanel({required this.controller});
-
-  final LaunchpadController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            const Expanded(
+              onPressed: controller.timerRunning
+                  ? controller.pauseTimer
+                  : controller.timerPaused
+                      ? controller.resumeTimer
+                      : controller.startTimer,
               child: Text(
-                'Import Lesson JSON',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                controller.timerRunning
+                    ? 'Pause'
+                    : controller.timerPaused
+                        ? 'Resume'
+                        : 'Start',
               ),
-            ),
-            OutlinedButton(
-              onPressed: () => _pickAndImport(context),
-              child: const Text('Choose JSON'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickAndImport(BuildContext context) async {
-    final input = html.FileUploadInputElement()
-      ..accept = '.json,application/json';
-    input.click();
-    await input.onChange.first;
-    final file = input.files?.isEmpty == false ? input.files!.first : null;
-    if (file == null) return;
-
-    try {
-      final raw = await _readFileAsText(file);
-      await controller.importLessonJson(raw);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lesson JSON imported.')),
-        );
-      }
-    } catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not import lesson JSON: $error')),
-        );
-      }
-    }
-  }
-
-  Future<String> _readFileAsText(html.File file) {
-    final completer = Completer<String>();
-    final reader = html.FileReader();
-    reader.onLoad.first.then((_) {
-      completer.complete(reader.result?.toString() ?? '');
-    });
-    reader.onError.first.then((_) {
-      completer.completeError('The selected file could not be read.');
-    });
-    reader.readAsText(file);
-    return completer.future;
-  }
-}
-
-class _LessonFlowPanel extends StatelessWidget {
-  const _LessonFlowPanel({required this.controller});
-
-  final LaunchpadController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final state = controller.state;
-    final lesson = state.activeLesson;
-    final phases = lesson?.phases ?? const <LessonPhase>[];
-    final currentPhase = state.currentPhase;
-    final currentIndex = phases.isEmpty
-        ? 0
-        : state.currentPhaseIndex.clamp(0, phases.length - 1);
-
-    return Card(
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Lesson Flow',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                lesson?.lessonInfo.title ?? 'No active lesson',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                currentPhase == null
-                    ? 'No phase selected'
-                    : '${currentPhase.title} / ${currentPhase.type}',
-                style: const TextStyle(color: Color(0xFF8B949E)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                phases.isEmpty
-                    ? 'Phase 0 of 0'
-                    : 'Phase ${currentIndex + 1} of ${phases.length}',
-                style: const TextStyle(color: Color(0xFF8B949E)),
-              ),
-              if (phases.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: currentIndex,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Jump to phase'),
-                  items: [
-                    for (var i = 0; i < phases.length; i++)
-                      DropdownMenuItem(
-                        value: i,
-                        child: Text(
-                          '${i + 1}. ${phases[i].title}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) controller.goToPhase(value);
-                  },
-                ),
-              ],
-              const SizedBox(height: 14),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed:
-                      phases.isEmpty ? null : controller.restartPhaseTimer,
-                  child: const Text('Restart Phase Timer'),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -519,68 +411,87 @@ class _TeamsPanelState extends State<_TeamsPanel> {
               for (final team in widget.controller.state.teams)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: teamAccentColor(team),
-                              shape: BoxShape.circle,
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10161F),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.24),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.72),
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _nameControllers[team.id],
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                hintText: 'Table number',
-                                border: const OutlineInputBorder(),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                            SizedBox(
+                              width: 260,
+                              child: TextField(
+                                controller: _nameControllers[team.id],
+                                readOnly: true,
+                                decoration: const InputDecoration(
+                                  hintText: 'Table number',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _membersControllers[team.id],
+                          maxLines: 3,
+                          minLines: 2,
+                          decoration: const InputDecoration(
+                            hintText:
+                                'Student names (one per line)\nE.g.: Alex\nJordan',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.all(12),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _membersControllers[team.id],
-                        maxLines: 2,
-                        minLines: 2,
-                        decoration: const InputDecoration(
-                          hintText:
-                              'Student names (one per line)\nE.g.: Alex\nJordan',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.all(12),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            widget.controller.updateTeam(
-                              teamId: team.id,
-                              name: 'Table ${team.tableNumber}',
-                              members: _membersControllers[team.id]!
-                                  .text
-                                  .split('\n')
-                                  .map((m) => m.trim())
-                                  .where((m) => m.isNotEmpty)
-                                  .toList(),
-                            );
-                          },
-                          child: const Text('Save members'),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              widget.controller.updateTeam(
+                                teamId: team.id,
+                                name: 'Table ${team.tableNumber}',
+                                members: _membersControllers[team.id]!
+                                    .text
+                                    .split('\n')
+                                    .map((m) => m.trim())
+                                    .where((m) => m.isNotEmpty)
+                                    .toList(),
+                              );
+                            },
+                            child: const Text('Save members'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -591,53 +502,3 @@ class _TeamsPanelState extends State<_TeamsPanel> {
   }
 }
 
-class _DemoPanel extends StatelessWidget {
-  const _DemoPanel({required this.controller});
-
-  final LaunchpadController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Expanded(child: StatusPill(status: controller.syncStatus)),
-            TextButton(
-              onPressed: controller.resetDemoData,
-              child: const Text('Reset Demo Data'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AmbientSoon extends StatelessWidget {
-  const _AmbientSoon();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Card(
-      child: Padding(
-        padding: EdgeInsets.all(18),
-        child: Opacity(
-          opacity: .55,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Ambient Mode',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                ),
-              ),
-              Chip(label: Text('coming soon')),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

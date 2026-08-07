@@ -215,6 +215,264 @@ List<String> _asStringList(Object? value) {
   return value.map((item) => item.toString()).toList();
 }
 
+class ClassroomState {
+  const ClassroomState({
+    this.id = 1,
+    this.classId,
+    this.lessonId,
+    this.currentPhaseId,
+    this.tableLayoutId,
+    this.isLive = false,
+    this.currentActivity = '',
+    this.timerStatus = 'stopped',
+    this.timerDurationSeconds = 300,
+    this.timerRemainingSeconds = 300,
+    this.timerEndsAt,
+    this.updatedAt,
+  });
+
+  final int id;
+  final int? classId;
+  final int? lessonId;
+  final String? currentPhaseId;
+  final int? tableLayoutId;
+  final bool isLive;
+  final String currentActivity;
+  final String timerStatus;
+  final int timerDurationSeconds;
+  final int timerRemainingSeconds;
+  final DateTime? timerEndsAt;
+  final DateTime? updatedAt;
+
+  ClassroomState copyWith({
+    int? id,
+    int? classId,
+    int? lessonId,
+    String? currentPhaseId,
+    int? tableLayoutId,
+    bool? isLive,
+    String? currentActivity,
+    String? timerStatus,
+    int? timerDurationSeconds,
+    int? timerRemainingSeconds,
+    DateTime? timerEndsAt,
+    DateTime? updatedAt,
+  }) =>
+      ClassroomState(
+        id: id ?? this.id,
+        classId: classId ?? this.classId,
+        lessonId: lessonId ?? this.lessonId,
+        currentPhaseId: currentPhaseId ?? this.currentPhaseId,
+        tableLayoutId: tableLayoutId ?? this.tableLayoutId,
+        isLive: isLive ?? this.isLive,
+        currentActivity: currentActivity ?? this.currentActivity,
+        timerStatus: timerStatus ?? this.timerStatus,
+        timerDurationSeconds: timerDurationSeconds ?? this.timerDurationSeconds,
+        timerRemainingSeconds:
+            timerRemainingSeconds ?? this.timerRemainingSeconds,
+        timerEndsAt: timerEndsAt ?? this.timerEndsAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
+  factory ClassroomState.fromJson(Map<String, dynamic> json) => ClassroomState(
+        id: json['id'] is int ? json['id'] as int : 1,
+        classId: json['class_id'] is int ? json['class_id'] as int : null,
+        lessonId: json['lesson_id'] is int ? json['lesson_id'] as int : null,
+        currentPhaseId: json['current_phase_id']?.toString(),
+        tableLayoutId: json['table_layout_id'] is int
+            ? json['table_layout_id'] as int
+            : null,
+        isLive: json['is_live'] is bool ? json['is_live'] as bool : false,
+        currentActivity: json['current_activity']?.toString() ?? '',
+        timerStatus: json['timer_status']?.toString() ?? 'stopped',
+        timerDurationSeconds: json['timer_duration_seconds'] is int
+            ? json['timer_duration_seconds'] as int
+            : 300,
+        timerRemainingSeconds: json['timer_remaining_seconds'] is int
+            ? json['timer_remaining_seconds'] as int
+            : 300,
+        timerEndsAt: json['timer_ends_at'] == null
+            ? null
+            : DateTime.parse(json['timer_ends_at'].toString()).toUtc(),
+        updatedAt: json['updated_at'] == null
+            ? null
+            : DateTime.parse(json['updated_at'].toString()).toUtc(),
+      );
+}
+
+class LaunchpadClassRecord {
+  const LaunchpadClassRecord({
+    required this.id,
+    required this.name,
+    required this.courseName,
+    required this.period,
+  });
+
+  final int id;
+  final String name;
+  final String courseName;
+  final String period;
+
+  String get displayName {
+    if (name.trim().isNotEmpty) return name;
+    final parts = [courseName.trim(), period.trim()]
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return parts.join(' - ');
+  }
+
+  factory LaunchpadClassRecord.fromJson(Map<String, dynamic> json) =>
+      LaunchpadClassRecord(
+        id: json['id'] is int
+            ? json['id'] as int
+            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        name: json['name']?.toString() ?? '',
+        courseName: json['course_name']?.toString() ?? '',
+        period: json['period']?.toString() ?? '',
+      );
+}
+
+class LaunchpadLessonRecord {
+  const LaunchpadLessonRecord({
+    required this.id,
+    required this.classId,
+    required this.lessonDate,
+    required this.title,
+  });
+
+  final int id;
+  final int classId;
+  final DateTime? lessonDate;
+  final String title;
+
+  String get displayLabel {
+    final parts = <String>[];
+    if (lessonDate != null) {
+      parts.add(_formatDate(lessonDate!));
+    }
+    if (title.trim().isNotEmpty) {
+      parts.add(title.trim());
+    }
+    if (parts.isEmpty) {
+      return 'Untitled lesson';
+    }
+    return parts.join(' • ');
+  }
+
+  factory LaunchpadLessonRecord.fromJson(Map<String, dynamic> json) =>
+      LaunchpadLessonRecord(
+        id: json['id'] is int
+            ? json['id'] as int
+            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        classId: json['class_id'] is int
+            ? json['class_id'] as int
+            : int.tryParse(json['class_id']?.toString() ?? '') ?? 0,
+        lessonDate: json['lesson_date'] == null
+            ? null
+            : DateTime.tryParse(json['lesson_date'].toString()),
+        title: json['title']?.toString() ?? '',
+      );
+}
+
+String _formatDate(DateTime date) {
+  const months = <String>[
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${months[date.month - 1]} ${date.day}, ${date.year}';
+}
+
+class LaunchpadStudentRecord {
+  const LaunchpadStudentRecord({
+    required this.id,
+    required this.classId,
+    required this.firstName,
+    required this.lastName,
+    required this.displayName,
+  });
+
+  final int id;
+  final int classId;
+  final String firstName;
+  final String lastName;
+  final String displayName;
+
+  String get label {
+    final trimmedDisplay = displayName.trim();
+    if (trimmedDisplay.isNotEmpty) return trimmedDisplay;
+    final parts = [firstName.trim(), lastName.trim()]
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return parts.join(' ');
+  }
+
+  factory LaunchpadStudentRecord.fromJson(Map<String, dynamic> json) =>
+      LaunchpadStudentRecord(
+        id: json['id'] is int
+            ? json['id'] as int
+            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        classId: json['class_id'] is int
+            ? json['class_id'] as int
+            : int.tryParse(json['class_id']?.toString() ?? '') ?? 0,
+        firstName: json['first_name']?.toString() ?? '',
+        lastName: json['last_name']?.toString() ?? '',
+        displayName: json['display_name']?.toString() ?? '',
+      );
+}
+
+class LaunchpadTableLayoutRecord {
+  const LaunchpadTableLayoutRecord({
+    required this.id,
+    required this.classId,
+    required this.name,
+    required this.tableCount,
+  });
+
+  final int id;
+  final int classId;
+  final String name;
+  final int tableCount;
+
+  factory LaunchpadTableLayoutRecord.fromJson(Map<String, dynamic> json) =>
+      LaunchpadTableLayoutRecord(
+        id: json['id'] is int
+            ? json['id'] as int
+            : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+        classId: json['class_id'] is int
+            ? json['class_id'] as int
+            : int.tryParse(json['class_id']?.toString() ?? '') ?? 0,
+        name: json['name']?.toString() ?? 'Untitled Layout',
+        tableCount: json['table_count'] is int
+            ? json['table_count'] as int
+            : int.tryParse(json['table_count']?.toString() ?? '') ?? 6,
+      );
+}
+
+class LaunchpadTableLayoutMember {
+  const LaunchpadTableLayoutMember({
+    required this.studentId,
+    required this.tableNumber,
+  });
+
+  final int studentId;
+  final int tableNumber;
+
+  Map<String, dynamic> toJson() => {
+        'student_id': studentId,
+        'table_number': tableNumber,
+      };
+}
+
 class LaunchClass {
   const LaunchClass({
     required this.id,
@@ -524,6 +782,14 @@ class LaunchpadState {
     if (lesson == null || lesson.phases.isEmpty) return null;
     final index = currentPhaseIndex.clamp(0, lesson.phases.length - 1);
     return lesson.phases[index];
+  }
+
+  int? phaseIndexForId(String? phaseId) {
+    if (phaseId == null || phaseId.isEmpty) return null;
+    final lesson = activeLesson;
+    if (lesson == null) return null;
+    final index = lesson.phases.indexWhere((phase) => phase.id == phaseId);
+    return index >= 0 ? index : null;
   }
 
   LaunchpadState copyWith({

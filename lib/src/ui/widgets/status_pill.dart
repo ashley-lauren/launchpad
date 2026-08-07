@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 
-import '../../services/sync_service.dart';
-
 class StatusPill extends StatelessWidget {
-  const StatusPill({super.key, required this.status});
+  const StatusPill({
+    super.key,
+    this.label,
+    this.color,
+    this.onTap,
+  });
 
-  final SyncStatus status;
+  final String? label;
+  final Color? color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      SyncStatus.onlineSynced => ('Online: synced', const Color(0xFF7EE787)),
-      SyncStatus.offlineLocal => (
-          'Offline: local mode',
-          const Color(0xFFFFC857),
-        ),
-      SyncStatus.syncPending => ('Sync pending', const Color(0xFFFFC857)),
-      SyncStatus.syncing => ('Syncing...', const Color(0xFF79C0FF)),
-    };
-    return AnimatedContainer(
+    final resolvedLabel = label ?? 'Not Live';
+    final resolvedColor = color ?? const Color(0xFF8B949E);
+    final content = AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: resolvedColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.52)),
+        border: Border.all(color: resolvedColor.withValues(alpha: 0.52)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -32,12 +30,24 @@ class StatusPill extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            decoration:
+                BoxDecoration(color: resolvedColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: color, fontSize: 12)),
+          Text(resolvedLabel,
+              style: TextStyle(color: resolvedColor, fontSize: 12)),
         ],
       ),
+    );
+
+    if (onTap == null) {
+      return content;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: content,
     );
   }
 }
